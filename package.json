@@ -1,0 +1,20 @@
+{
+	"name": "capsule-particle",
+	"version": "1.0.0",
+	"main": "index.js",
+	"repository": "https://github.com/zhangrui0517/capsule-particle.git",
+	"license": "MIT",
+	"devDependencies": {
+		"@typescript-eslint/eslint-plugin": "^5.37.0",
+		"@typescript-eslint/parser": "^5.37.0",
+		"capsule-pack": "^1.0.9",
+		"eslint-config-prettier": "^8.5.0",
+		"prettier": "^2.7.1",
+		"typescript": "^4.8.3"
+	},
+	"scripts": {
+		"dev": "npx cpack dev",
+		"dev-server": "npx cpack dev-server",
+		"build": "npx cpack build"
+	}
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "capsule-pack/tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "ES2015"
+  },
+  "include": ["./src"],
+  /* 不检查的目录 */
+  "exclude": ["node_modules", "./dist"]
+}
