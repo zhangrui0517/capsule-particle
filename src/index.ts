@@ -14,9 +14,9 @@ export interface IOption {
 
 class Particle {
   flatDescribe: Record<string, IOption['describe']>
-  constructor (options: IOption) {
+  constructor(options: IOption) {
     const { describe, schema, controller } = options
-    if(!describe) {
+    if (!describe) {
       throw new Error(`Invaild describe field, describe is ${describe}`)
     }
     this.flatDescribe = flatDescribe(jsonClone(describe, schema), controller)

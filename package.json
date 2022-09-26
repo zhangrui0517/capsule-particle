@@ -3,18 +3,31 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"repository": "https://github.com/zhangrui0517/capsule-particle.git",
+	"author": "zhangrui <393394595@qq.com>",
 	"license": "MIT",
 	"devDependencies": {
-		"@typescript-eslint/eslint-plugin": "^5.37.0",
-		"@typescript-eslint/parser": "^5.37.0",
-		"capsule-pack": "^1.0.9",
+		"@typescript-eslint/eslint-plugin": "^5.38.0",
+		"@typescript-eslint/parser": "^5.38.0",
+		"capsule-pack": "^1.0.16",
+		"eslint": "^8.24.0",
 		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"husky": "^8.0.1",
+		"lint-staged": "^13.0.3",
 		"prettier": "^2.7.1",
 		"typescript": "^4.8.3"
 	},
 	"scripts": {
 		"dev": "npx cpack dev",
 		"dev-server": "npx cpack dev-server",
-		"build": "npx cpack build"
+		"build": "npx cpack build",
+		"lint-staged": "lint-staged"
+	},
+	"lint-staged": {
+		"./src/**/*.*": [
+			"prettier --write",
+			"eslint --cache --fix",
+			"yarn run build"
+		]
 	}
 }
