@@ -2073,10 +2073,10 @@ caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001400, caniuse-lite@^1.0.30001407:
   resolved "https://registry.npmmirror.com/caniuse-lite/-/caniuse-lite-1.0.30001412.tgz#30f67d55a865da43e0aeec003f073ea8764d5d7c"
   integrity sha512-+TeEIee1gS5bYOiuf+PS/kp2mrXic37Hl66VY6EAfxasIk5fELTktK2oOezYed12H8w7jt3s512PpulQidPjwA==
 
-capsule-pack@^1.0.16:
-  version "1.0.16"
-  resolved "https://registry.npmmirror.com/capsule-pack/-/capsule-pack-1.0.16.tgz#0b7d3c150ce634ecd25b28d019578328194e3c6a"
-  integrity sha512-aDY3bbi3EF/HWVdEN97aF8KAvkwi8OcUqzBlPJCMOy+LH8pXEfHdvomQe5dskWxSXqK1MDOWMHvNVEh+qsXNPQ==
+capsule-pack@^1.0.17:
+  version "1.0.17"
+  resolved "https://registry.npmmirror.com/capsule-pack/-/capsule-pack-1.0.17.tgz#3841b80125cacd8b46ad88439b2a83ef6d6b84de"
+  integrity sha512-YvbmHH+ymKZ1YfQBcIhpcBJYWvW4EKHU6P97o4xm9P3Ta3w3cCCvhDCNtuKd0ggG2NKPSpaWg9W3BYrqTQmNgw==
   dependencies:
     "@babel/core" "^7.18.13"
     "@babel/preset-env" "^7.18.10"
