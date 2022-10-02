@@ -1,10 +1,10 @@
-import { descriptionToParticle } from "./utils"
-import { Description, ParticleInfo } from "./types"
+import { descriptionToParticle } from './utils'
+import { Description, ParticleInfo } from './types'
 export interface IOption {
   /** 描述 */
   description: Description | Description[]
   /** 描述控制器，在便利描述信息时，会调用该回调 */
-  controller?: (descItem: IOption["description"]) => void
+  controller?: (descItem: IOption['description']) => void
 }
 
 class Particle {
@@ -14,10 +14,10 @@ class Particle {
     if (!description) {
       throw new Error(`Invaild description field, description is ${description}`)
     }
-    console.time("Particle")
+    console.time('Particle')
     this.particle = descriptionToParticle(description, controller)
-    console.log("this.particle: ", this.particle)
-    console.timeEnd("Particle")
+    console.log('this.particle: ', this.particle)
+    console.timeEnd('Particle')
   }
 }
 
