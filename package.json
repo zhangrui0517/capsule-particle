@@ -6,6 +6,7 @@
 	"author": "zhangrui <393394595@qq.com>",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/lodash": "^4.14.186",
 		"@typescript-eslint/eslint-plugin": "^5.38.0",
 		"@typescript-eslint/parser": "^5.38.0",
 		"capsule-pack": "^1.0.17",
@@ -21,13 +22,16 @@
 		"dev": "npx cpack dev",
 		"dev-server": "npx cpack dev-server",
 		"build": "npx cpack build",
-		"lint-staged": "lint-staged"
+		"lint-staged": "lint-staged",
+		"lint": "npx eslint --cache --fix"
 	},
 	"lint-staged": {
 		"./src/**/*.*": [
-			"prettier --write",
-			"eslint --cache --fix",
-			"yarn run build"
+			"npx prettier --write",
+			"npx eslint --cache --fix"
 		]
+	},
+	"dependencies": {
+		"lodash": "^4.17.21"
 	}
 }

@@ -1,4 +1,8 @@
 {
   "root": true,
-  "extends": ["./node_modules/capsule-pack/.eslintrc.json"]
+  "extends": ["./node_modules/capsule-pack/.eslintrc.json"],
+  "rules": {
+    "prettier/prettier": "warn",
+    "quotes": "off"
+  }
 }
