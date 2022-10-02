@@ -1,6 +1,6 @@
 import { IOption } from '..'
 import { Description, ParticleExtraInfo, FlatParticle, ParticleInfo, ParticleItem } from '../types'
-import { forFun, PARTICLE_FLAG } from '.'
+import { forFun, PARTICLE_FLAG, hasOwnProperty } from '.'
 import { cloneDeep } from 'lodash'
 
 /**
@@ -15,25 +15,30 @@ export function descriptionToParticle(description: Description | Description[], 
   // 遍历容器
   let container: Array<Description[]> = [formatdescription]
   // 扩展信息
-  let particleInfo: ParticleExtraInfo['__particle'][] = []
+  let particleInfo: Partial<ParticleExtraInfo['__particle']>[] = []
 
   while (container.length) {
     const newContainer: Array<Description[]> = []
-    const newParticleInfo: ParticleExtraInfo['__particle'][] = []
+    const newParticleInfo: Partial<ParticleExtraInfo['__particle']>[] = []
     forFun(container, (containerItem, index) => {
       const extra = particleInfo[index]
-      forFun(containerItem, descriptionItem => {
-        descriptionItem[PARTICLE_FLAG] = {
-          ...extra
+      forFun(containerItem, (descriptionItem, index) => {
+        if (!hasOwnProperty(flatParticle, descriptionItem.key)) {
+          descriptionItem[PARTICLE_FLAG] = {
+            ...extra,
+            index
+          }
+          flatParticle[descriptionItem.key] = descriptionItem as ParticleItem
+          if (descriptionItem.children?.length) {
+            newContainer.push(descriptionItem.children)
+            newParticleInfo.push({
+              parent: descriptionItem.key
+            })
+          }
+          callback && callback(descriptionItem)
+        } else {
+          console.warn(`Repeat key, skip. key is ${descriptionItem.key}`)
         }
-        flatParticle[descriptionItem.key] = descriptionItem as ParticleItem
-        if (descriptionItem.children?.length) {
-          newContainer.push(descriptionItem.children)
-          newParticleInfo.push({
-            parent: descriptionItem.key
-          })
-        }
-        callback && callback(descriptionItem)
       })
     })
     container = newContainer

@@ -7,7 +7,10 @@ export type Description = {
 // 扩展信息，注入到描述中，用于记录父级信息等
 export type ParticleExtraInfo = {
   __particle: {
+    // 父级的key
     parent: string
+    // 在子元素中的位置
+    index: number
   }
 }
 
