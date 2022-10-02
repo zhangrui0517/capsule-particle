@@ -3,6 +3,7 @@
   "extends": ["./node_modules/capsule-pack/.eslintrc.json"],
   "rules": {
     "prettier/prettier": "warn",
-    "quotes": "off"
+    "quotes": "off",
+    "@typescript-eslint/no-non-null-assertion": "off"
   }
 }
