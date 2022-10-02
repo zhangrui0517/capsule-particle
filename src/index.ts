@@ -1,25 +1,23 @@
-import { jsonClone, flatDescribe } from './utils'
-
+import { descriptionToParticle } from "./utils"
+import { Description, ParticleInfo } from "./types"
 export interface IOption {
   /** 描述 */
-  describe: {
-    $key: string
-    $children?: Array<IOption['describe']>
-  } & Record<string, any>
+  description: Description | Description[]
   /** 描述控制器，在便利描述信息时，会调用该回调 */
-  controller?: (descItem: IOption['describe']) => void
-  /** 对describe的字段类型映射表，用于提升深度克隆时的性能 */
-  schema?: Record<string, any>
+  controller?: (descItem: IOption["description"]) => void
 }
 
 class Particle {
-  flatDescribe: Record<string, IOption['describe']>
+  particle: ParticleInfo
   constructor(options: IOption) {
-    const { describe, schema, controller } = options
-    if (!describe) {
-      throw new Error(`Invaild describe field, describe is ${describe}`)
+    const { description, controller } = options
+    if (!description) {
+      throw new Error(`Invaild description field, description is ${description}`)
     }
-    this.flatDescribe = flatDescribe(jsonClone(describe, schema), controller)
+    console.time("Particle")
+    this.particle = descriptionToParticle(description, controller)
+    console.log("this.particle: ", this.particle)
+    console.timeEnd("Particle")
   }
 }
 

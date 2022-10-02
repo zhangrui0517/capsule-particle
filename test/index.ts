@@ -1,27 +1,13 @@
 import Particle, { IOption } from '../src'
+import { description } from './data'
 
-const describe: IOption['describe'] = {
-  $key: 'a',
-  $children: [
-    {
-      $key: 'b',
-      $children: [
-        {
-          $key: 'c'
-        }
-      ],
-    },
-    {
-      $key: 'd'
-    }
-  ]
+function controller(descItem: IOption['description']) {
+  descItem
 }
 
-function controller (descItem: IOption['describe']) {
-  console.log('descItem: ',descItem)
-}
-
-const testParticle = new Particle({
-  describe,
+const particleObj = new Particle({
+  description,
   controller
 })
+
+console.log('particleObj', particleObj)
