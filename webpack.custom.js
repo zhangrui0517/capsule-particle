@@ -9,6 +9,9 @@ const config = {
   config: webpackConfig => {
     const devServer = webpackConfig.devServer || {}
     const devServerClient = devServer.client || {}
+    if (webpackConfig.mode === 'production') {
+      webpackConfig.plugins = webpackConfig.plugins.filter(plugin => plugin.constructor.name !== 'HtmlWebpackPlugin')
+    }
     webpackConfig.devServer = {
       ...devServer,
       client: {
