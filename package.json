@@ -1,11 +1,11 @@
 {
 	"name": "capsule-particle",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"main": "./dist/index.js",
 	"repository": "https://github.com/zhangrui0517/capsule-particle.git",
 	"author": "zhangrui0517",
 	"license": "MIT",
-  "types": "./dist/index.d.ts",
+	"types": "./dist/index.d.ts",
 	"devDependencies": {
 		"@types/lodash": "^4.14.186",
 		"@typescript-eslint/eslint-plugin": "^5.38.0",
