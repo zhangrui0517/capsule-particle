@@ -1,6 +1,6 @@
 const config = {
   /** 要打包的文件根目录 */
-  root: 'test',
+  // root: 'test',
   /** 是否需要动态polyfill注入 */
   // dynamicPolyfill: true
   /** 是否启用babel对react的解析 */
@@ -24,6 +24,7 @@ const config = {
     }
     return webpackConfig
   }
+  // analyzer: {}
 }
 
 module.exports = config
