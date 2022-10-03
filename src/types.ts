@@ -11,6 +11,8 @@ export type ParticleExtraInfo = {
     parent: string
     // 在子元素中的位置
     index: number
+    // 层级记录
+    layer: string
   }
 }
 

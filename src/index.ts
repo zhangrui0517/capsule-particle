@@ -21,7 +21,7 @@ class Particle {
     const currentItem = this.#particle.flatParticle[key]
     if (currentItem) {
       const particleExtra = currentItem[PARTICLE_FLAG]
-      const { parent, index } = particleExtra
+      const { parent, index, layer } = particleExtra
       const parentItem = this.#particle.flatParticle[parent]
       if (parentItem) {
         const cloneDescription = cloneDeep(description)
@@ -31,7 +31,8 @@ class Particle {
         parentItem.children!.splice(direction === 'after' ? index + 1 : index, 0, cloneDescription)
         forFun(parentItem.children!, (item, index) => {
           Object.assign(item[PARTICLE_FLAG], {
-            index
+            index,
+            layer: `${layer.slice(0, layer.length - 1)}${index}`
           })
         })
         this.#particle.flatParticle[description.key] = cloneDescription as ParticleItem
@@ -49,6 +50,15 @@ class Particle {
         if (parentItem) {
           parentItem.children!.splice(index, 1)
           delete flatParticle[key]
+          forFun(parentItem.children!, (item, index) => {
+            const particleExtra = item[PARTICLE_FLAG]
+            const { layer } = particleExtra
+            item[PARTICLE_FLAG] = {
+              ...particleExtra,
+              index,
+              layer: `${layer.slice(0, layer.length - 1)}${index}`
+            }
+          })
         }
       }
     })

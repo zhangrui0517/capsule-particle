@@ -32,21 +32,26 @@ export function descriptionToParticle(description: Description | Description[], 
           children: formatdescription,
           [PARTICLE_FLAG]: {
             parent: PARTICLE_TOP,
-            index: 0
+            index: 0,
+            layer: PARTICLE_TOP
           }
         }
       }
+
       forFun(containerItem, (descriptionItem, index) => {
         if (!hasOwnProperty(flatParticle, descriptionItem.key)) {
+          const layer = particleExtra?.layer ? `${particleExtra.layer}-${index}` : index + ''
           descriptionItem[PARTICLE_FLAG] = {
             ...particleExtra,
-            index
+            index,
+            layer
           }
           flatParticle[descriptionItem.key] = descriptionItem as ParticleItem
           if (descriptionItem.children?.length) {
             newContainer.push(descriptionItem.children)
             newParticleInfo.push({
-              parent: descriptionItem.key
+              parent: descriptionItem.key,
+              layer
             })
           }
           callback && callback(descriptionItem)
