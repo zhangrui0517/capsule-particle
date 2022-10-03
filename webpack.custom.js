@@ -7,9 +7,13 @@ const config = {
   // react: true,
   /** webpack config 自定义调整，会通过webpack.merge与预设webpack配置合并 */
   config: webpackConfig => {
-    webpackConfig.output.library = {
-      name: 'capsule-particle',
-      type: 'umd'
+    webpackConfig.output = {
+      ...webpackConfig.output,
+      library: {
+        name: 'capsule-particle',
+        type: 'umd'
+      },
+      filename: '[name].js'
     }
     if (webpackConfig.mode === 'production') {
       webpackConfig.plugins = webpackConfig.plugins.filter(plugin => plugin.constructor.name !== 'HtmlWebpackPlugin')
