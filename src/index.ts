@@ -78,9 +78,9 @@ class Particle {
       return false
     }
   }
-  getItem(keys?: string[]) {
-    if (keys === undefined) {
-      return this.#particle.flatParticle
+  getItem(keys?: string[], dataType: 'object' | 'array' = 'object') {
+    if (!keys) {
+      return dataType === 'object' ? this.#particle.flatParticle : Object.values(this.#particle.flatParticle)
     }
     const result: FlatParticle | Record<string, undefined> = {}
     forFun(keys, key => {
@@ -89,7 +89,7 @@ class Particle {
         result[key] = item
       }
     })
-    return result
+    return dataType === 'object' ? result : Object.values(result)
   }
   getParticle() {
     return this.#particle.particleTree
