@@ -1,6 +1,6 @@
 import { IOption } from '..'
 import { Description, ParticleExtraInfo, FlatParticle, ParticleInfo, ParticleItem } from '../types'
-import { forFun, PARTICLE_FLAG, hasOwnProperty } from '.'
+import { forFun, PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP } from '.'
 import { cloneDeep } from 'lodash'
 
 /**
@@ -21,11 +21,25 @@ export function descriptionToParticle(description: Description | Description[], 
     const newContainer: Array<Description[]> = []
     const newParticleInfo: Partial<ParticleExtraInfo['__particle']>[] = []
     forFun(container, (containerItem, index) => {
-      const extra = particleInfo[index]
+      let particleExtra = particleInfo[index]
+      // 如果是最顶层的元素，则不存在扩展信息
+      if (particleExtra === undefined) {
+        particleExtra = {
+          parent: PARTICLE_TOP
+        }
+        flatParticle[PARTICLE_TOP] = {
+          key: PARTICLE_TOP,
+          children: formatdescription,
+          [PARTICLE_FLAG]: {
+            parent: PARTICLE_TOP,
+            index: 0
+          }
+        }
+      }
       forFun(containerItem, (descriptionItem, index) => {
         if (!hasOwnProperty(flatParticle, descriptionItem.key)) {
           descriptionItem[PARTICLE_FLAG] = {
-            ...extra,
+            ...particleExtra,
             index
           }
           flatParticle[descriptionItem.key] = descriptionItem as ParticleItem
