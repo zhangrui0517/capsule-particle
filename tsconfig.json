@@ -2,7 +2,11 @@
   "extends": "capsule-pack/tsconfig.base.json",
   "compilerOptions": {
     "target": "es2016",
-    "module": "ES2015"
+    "module": "ES2015",
+    "declaration": true,
+    "declarationDir": "./dist",
+    "emitDeclarationOnly": true,
+    "noEmit": false
   },
   "include": ["./src"],
   /* 不检查的目录 */
