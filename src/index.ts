@@ -109,4 +109,5 @@ class Particle {
   }
 }
 
+export * from './types'
 export default Particle
