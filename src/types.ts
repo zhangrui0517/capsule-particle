@@ -13,15 +13,22 @@ export type ParticleExtraInfo = {
     index: number
     // 层级记录
     layer: string
+    // 遍历顺序
+    order: number
   }
 }
 
-//
+// 处理后的字段信息
 export type ParticleItem = Description & ParticleExtraInfo
 
+// 字段信息映射表
 export type FlatParticle = Record<string, ParticleItem>
 
 export type ParticleInfo = {
+  // 字段信息映射表
   flatParticle: FlatParticle
+  // 处理后的字段树
   particleTree: ParticleItem | ParticleItem[]
+  // 按遍历顺序的字段集合
+  particles: ParticleItem[]
 }
