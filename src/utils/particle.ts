@@ -1,6 +1,6 @@
 import { IOption } from '..'
-import { Description, ParticleExtraInfo, FlatParticle, ParticleInfo, ParticleItem } from '../types'
-import { forFun, PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP } from '.'
+import { Description, FlatParticle, ParticleInfo, ParticleItem } from '../types'
+import { PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP } from '.'
 import { cloneDeep } from 'lodash'
 
 /**
@@ -12,60 +12,53 @@ export function descriptionToParticle(description: Description | Description[], 
   const formatdescription = Array.isArray(description) ? cloneDeep(description) : [cloneDeep(description)]
   // 记录打平信息
   const flatParticle: FlatParticle = {}
-  // 遍历容器
-  let container: Array<Description[]> = [formatdescription]
-  // 扩展信息
-  let particleInfo: Partial<ParticleExtraInfo['__particle']>[] = []
-
-  while (container.length) {
-    const newContainer: Array<Description[]> = []
-    const newParticleInfo: Partial<ParticleExtraInfo['__particle']>[] = []
-    forFun(container, (containerItem, index) => {
-      let particleExtra = particleInfo[index]
-      // 如果是最顶层的元素，则不存在扩展信息
-      if (particleExtra === undefined) {
-        particleExtra = {
-          parent: PARTICLE_TOP
-        }
-        flatParticle[PARTICLE_TOP] = {
-          key: PARTICLE_TOP,
-          children: formatdescription,
-          [PARTICLE_FLAG]: {
-            parent: PARTICLE_TOP,
-            index: 0,
-            layer: PARTICLE_TOP
-          }
-        }
-      }
-
-      forFun(containerItem, (descriptionItem, index) => {
-        if (!hasOwnProperty(flatParticle, descriptionItem.key)) {
-          const layer = particleExtra?.layer ? `${particleExtra.layer}-${index}` : index + ''
-          descriptionItem[PARTICLE_FLAG] = {
-            ...particleExtra,
-            index,
-            layer
-          }
-          flatParticle[descriptionItem.key] = descriptionItem as ParticleItem
-          if (descriptionItem.children?.length) {
-            newContainer.push(descriptionItem.children)
-            newParticleInfo.push({
-              parent: descriptionItem.key,
-              layer
-            })
-          }
-          callback && callback(descriptionItem)
-        } else {
-          console.warn(`Repeat key, skip. key is ${descriptionItem.key}`)
-        }
-      })
-    })
-    container = newContainer
-    particleInfo = newParticleInfo
+  // 按顺序记录字段信息
+  const particles: ParticleItem[] = []
+  // 遍历队列
+  let queue: Description[] = formatdescription.slice(0)
+  // 辅助队列，用于记录队列中字段的额外数据
+  let auxiliaryQueue: Array<Record<string, any>> = queue.map((_item, index, arr) => ({
+    parent: PARTICLE_TOP,
+    index,
+    layer: arr.length === 1 ? '0' : `0-${index}`
+  }))
+  // 遍历次数
+  let ergodicOrder = 0
+  while (queue[0]) {
+    const currentDesc = queue.shift() as Description
+    const auxiliary = auxiliaryQueue.shift() || {}
+    if (hasOwnProperty(flatParticle, currentDesc.key)) {
+      console.error(`Repeat key, skip. key is ${currentDesc.key}`)
+      break
+    }
+    const { parent, index, layer } = auxiliary
+    currentDesc[PARTICLE_FLAG] = {
+      parent,
+      index,
+      layer,
+      order: ergodicOrder
+    }
+    const result = callback && callback(currentDesc)
+    if (result !== undefined && !result) {
+      break
+    }
+    flatParticle[currentDesc.key] = currentDesc as ParticleItem
+    particles.push(currentDesc as ParticleItem)
+    ergodicOrder += 1
+    if (currentDesc.children?.length) {
+      queue = [...currentDesc.children, ...queue]
+      const childrenAuxiliary = currentDesc.children.map((_childItem, index) => ({
+        parent: currentDesc.key,
+        index,
+        layer: `${layer}-${index}`
+      }))
+      auxiliaryQueue = [...childrenAuxiliary, ...auxiliaryQueue]
+    }
   }
 
   return {
     flatParticle,
-    particleTree: formatdescription as ParticleInfo['particleTree']
+    particleTree: formatdescription as ParticleInfo['particleTree'],
+    particles
   }
 }
