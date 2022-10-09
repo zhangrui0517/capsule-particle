@@ -4,7 +4,7 @@ import { cloneDeep } from 'lodash'
 export interface IOption {
   /** 描述 */
   description: Description | Description[]
-  /** 描述控制器，在便利描述信息时，会调用该回调 */
+  /** 描述控制器，在遍历描述信息时，会调用该回调 */
   controller?: (descItem: IOption['description']) => void
 }
 
