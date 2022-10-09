@@ -11,4 +11,5 @@ yarn.lock
 .prettierrc
 .editorconfig
 .eslintrc.json
+.eslintignore
 webpack.custom.js
