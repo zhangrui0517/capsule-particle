@@ -9,13 +9,14 @@ const config = {
   config: webpackConfig => {
     webpackConfig.output = {
       ...webpackConfig.output,
+      filename: '[name].js',
       library: {
         name: 'capsule-particle',
         type: 'umd',
         export: 'default'
-      },
-      filename: '[name].js'
+      }
     }
+    webpackConfig.optimization.splitChunks = false
     if (webpackConfig.mode === 'production') {
       webpackConfig.plugins = webpackConfig.plugins.filter(plugin => plugin.constructor.name !== 'HtmlWebpackPlugin')
     }
