@@ -38,7 +38,7 @@ export function descriptionToParticle(description: Description | Description[], 
       layer,
       order: ergodicOrder
     }
-    const result = callback && callback(currentDesc)
+    const result = callback && callback(currentDesc as ParticleItem)
     if (result !== undefined && !result) {
       break
     }
