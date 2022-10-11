@@ -1,6 +1,6 @@
 {
 	"name": "capsule-particle",
-	"version": "1.0.14",
+	"version": "1.0.15",
 	"main": "./dist/index.js",
 	"repository": "https://github.com/zhangrui0517/capsule-particle.git",
 	"author": "zhangrui0517",
@@ -25,7 +25,8 @@
 		"build": "npx cpack build",
 		"postbuild": "npx tsc",
 		"lint-staged": "lint-staged",
-		"lint": "npx eslint --cache --fix"
+		"lint": "npx eslint --cache --fix",
+		"prepublish": "yarn build"
 	},
 	"lint-staged": {
 		"./src/**/*.*": [
