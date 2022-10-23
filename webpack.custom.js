@@ -12,8 +12,7 @@ const config = {
       filename: '[name].js',
       library: {
         name: 'capsule-particle',
-        type: 'umd',
-        export: 'default'
+        type: 'umd'
       }
     }
     webpackConfig.optimization.splitChunks = false

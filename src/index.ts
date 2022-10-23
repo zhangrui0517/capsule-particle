@@ -1,6 +1,7 @@
-import { descriptionToParticle, forFun, PARTICLE_FLAG, hasOwnProperty } from './utils'
+import { descriptionToParticle, forFun, PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP } from './utils'
 import { Description, ParticleInfo, FlatParticle, ParticleItem } from './types'
 import { cloneDeep } from 'lodash'
+
 export interface IOption {
   /** 描述 */
   description: Description | Description[]
@@ -119,4 +120,5 @@ class Particle {
 }
 
 export * from './types'
+export { PARTICLE_FLAG, PARTICLE_TOP }
 export default Particle
