@@ -16,7 +16,7 @@ class Particle {
     if (!description) {
       throw new Error(`Invaild description field, description is ${description}`)
     }
-    this.#particle = descriptionToParticle(description, controller)
+    this.#particle = descriptionToParticle(description, this, controller)
   }
   append(key: string, description: Description, direction: 'before' | 'after' = 'after') {
     const currentItem = this.#particle.flatParticle[key]
@@ -81,7 +81,7 @@ class Particle {
         return false
       }
       const cloneData = cloneDeep(data)
-      Object.assign(cloneData, data)
+      Object.assign(item, cloneData)
       return true
     } else {
       console.error(`Cannot find element to set, key is ${key}`)
