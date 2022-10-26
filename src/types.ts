@@ -19,7 +19,10 @@ export type ParticleExtraInfo = {
 }
 
 // 处理后的字段信息
-export type ParticleItem = Description & ParticleExtraInfo
+export type ParticleItem = Description &
+  ParticleExtraInfo & {
+    children?: Array<ParticleItem>
+  }
 
 // 字段信息映射表
 export type FlatParticle = Record<string, ParticleItem>

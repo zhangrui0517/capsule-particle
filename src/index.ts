@@ -1,4 +1,4 @@
-import { descriptionToParticle, forFun, PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP } from './utils'
+import { descriptionToParticle, forFun, PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP, getLastParticleOrder } from './utils'
 import { Description, ParticleInfo, FlatParticle, ParticleItem } from './types'
 import { cloneDeep } from 'lodash'
 
@@ -11,38 +11,57 @@ export interface IOption {
 
 class Particle {
   #particle: ParticleInfo
+  #controller: IOption['controller']
   constructor(options: IOption) {
     const { description, controller } = options
     if (!description) {
       throw new Error(`Invaild description field, description is ${description}`)
     }
+    this.#controller = controller
     this.#particle = descriptionToParticle(description, this, controller)
   }
-  append(key: string, description: Description, direction: 'before' | 'after' = 'after') {
-    const currentItem = this.#particle.flatParticle[key]
-    if (currentItem) {
-      const particleExtra = currentItem[PARTICLE_FLAG]
-      const { parent, index, layer, order } = particleExtra
-      const parentItem = this.#particle.flatParticle[parent]
-      if (parentItem) {
-        const newOrder = direction === 'after' ? order + 1 : order
-        const cloneDescription = cloneDeep(description)
-        cloneDescription[PARTICLE_FLAG] = {
-          parent
+  append(key: string, description: Description | Description[], order?: number) {
+    const parent = this.#particle.flatParticle[key]
+    const lastParticleOrder = parent ? getLastParticleOrder(parent) : -1
+    if (parent && lastParticleOrder >= 0) {
+      const formatDesc = Array.isArray(description) ? description : [description]
+      const { particleTree: appendParticleTree, flatParticle: appendFlatParticle, particles: appendParticles } = descriptionToParticle(formatDesc, this)
+      parent.children = parent.children || []
+      const parentChildLen = parent.children.length
+      order = order !== undefined && parentChildLen && order < parentChildLen ? order : parent.children.length
+      parent.children.splice(order, 0, ...(appendParticleTree as ParticleItem[]))
+      const particleExtra = parent[PARTICLE_FLAG]
+      // 对新插入的数据进行格式化，更正关联字段PARTICLE_FLAG中的数据
+      forFun(parent.children, (item, index) => {
+        item[PARTICLE_FLAG] = {
+          parent: key,
+          index,
+          layer: `${particleExtra.layer}-${index}`,
+          // order会在之后更正
+          order: -1
         }
-        parentItem.children!.splice(direction === 'after' ? index + 1 : index, 0, cloneDescription)
-        forFun(parentItem.children!, (item, index) => {
-          Object.assign(item[PARTICLE_FLAG], {
-            index,
-            layer: `${layer.slice(0, layer.length - 1)}${index}`
-          })
-        })
-        this.#particle.particles.splice(newOrder, 0, cloneDescription as ParticleItem)
-        forFun(this.#particle.particles, (item, index) => {
-          item[PARTICLE_FLAG].order = index
-        })
-        this.#particle.flatParticle[description.key] = cloneDescription as ParticleItem
-      }
+      })
+      forFun(appendParticles, item => {
+        const itemParticleExtra = item[PARTICLE_FLAG]
+        const { parent, layer: itemLayer } = itemParticleExtra
+        if (parent !== key) {
+          const itemParent = appendFlatParticle[parent]
+          const itemParentParticleExtra = itemParent![PARTICLE_FLAG]
+          const { layer: parentLayer } = itemParentParticleExtra
+          // 更正layer字段
+          const newItemLayer = `${parentLayer.slice(0, parentLayer.lastIndexOf('-'))}-${itemLayer.slice(itemLayer.lastIndexOf('-') + 1)}`
+          itemParticleExtra.layer = newItemLayer
+        }
+      })
+      this.#particle.particles.splice(lastParticleOrder + 1, 0, ...appendParticles)
+      forFun(this.#particle.particles, (item, index) => {
+        item[PARTICLE_FLAG].order = index
+      })
+      // 合并新增数据到打平树中
+      Object.assign(this.#particle.flatParticle, appendFlatParticle)
+      forFun(appendParticles, item => {
+        this.#controller && this.#controller(item)
+      })
     }
   }
   remove(keys: string[]) {

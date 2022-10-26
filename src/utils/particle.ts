@@ -33,19 +33,21 @@ export function descriptionToParticle(description: Description | Description[], 
       break
     }
     const { parent, index, layer } = auxiliary
-    currentDesc[PARTICLE_FLAG] = {
-      parent,
-      index,
-      layer,
-      order: ergodicOrder
-    }
-    const result = callback && callback(currentDesc as ParticleItem)
+    const result = normalizeDesc(currentDesc, {
+      ParticleExtra: {
+        parent,
+        index,
+        layer,
+        order: ergodicOrder
+      },
+      flatParticle,
+      Particle,
+      callback
+    })
+    particles.push(currentDesc as ParticleItem)
     if (result !== undefined && !result) {
       break
     }
-    flatParticle[currentDesc.key] = currentDesc as ParticleItem
-    bindParticleFunToDesc(currentDesc as ParticleItem, Particle)
-    particles.push(currentDesc as ParticleItem)
     ergodicOrder += 1
     if (currentDesc.children?.length) {
       queue = [...currentDesc.children, ...queue]
@@ -65,6 +67,24 @@ export function descriptionToParticle(description: Description | Description[], 
   }
 }
 
+/** 格式化配置 */
+export function normalizeDesc(
+  desc: Description,
+  normalizeInfo: {
+    ParticleExtra?: ParticleItem['__particle']
+    Particle?: Particle
+    flatParticle?: FlatParticle
+    callback?: IOption['controller']
+  }
+) {
+  const { Particle, ParticleExtra, flatParticle, callback } = normalizeInfo
+  desc[PARTICLE_FLAG] = ParticleExtra ? ParticleExtra : desc[PARTICLE_FLAG]
+  Particle && bindParticleFunToDesc(desc as ParticleItem, Particle)
+  flatParticle && (flatParticle[desc.key] = desc as ParticleItem)
+  const result = callback && callback(desc as ParticleItem)
+  return result
+}
+
 /** 将Particle实例的方法，绑定到每个字段上，预先填充部分调用信息 */
 export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
   const particleFuns = ['append', 'remove', 'replace', 'setItem']
@@ -72,8 +92,8 @@ export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
     let descFun
     switch (funName) {
       case 'append':
-        descFun = (description: Description, direction: 'before' | 'after' = 'after') => {
-          return Particle[funName](desc.key, description, direction)
+        descFun = (description: Description, order?: number) => {
+          return Particle[funName](desc.key, description, order)
         }
         break
       case 'remove':
@@ -99,4 +119,23 @@ export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
       value: descFun
     })
   })
+}
+
+export function getLastParticleOrder(particleItem: ParticleItem, limit?: number) {
+  const children = particleItem.children
+  if (!children?.length) {
+    return particleItem[PARTICLE_FLAG].order
+  }
+  const limitChildren = children[limit || children.length - 1]
+  const checkQuoto = [limitChildren]
+  let order = -1
+  while (checkQuoto[0]) {
+    const item = checkQuoto.shift() as ParticleItem
+    if (item.children?.length) {
+      checkQuoto[0] = item.children[item.children.length - 1]
+    } else {
+      order = item[PARTICLE_FLAG].order
+    }
+  }
+  return order
 }
