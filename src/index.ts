@@ -1,12 +1,12 @@
-import { descriptionToParticle, forFun, PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP, getLastParticleOrder } from './utils'
-import { Description, ParticleInfo, FlatParticle, ParticleItem } from './types'
+import { descriptionToParticle, forFun, PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP, getLastParticleOrder, getAllKeyByFlatParticle } from './utils'
+import { Description, ParticleInfo, FlatParticle, ParticleItem, CallbackStatusParam } from './types'
 import { cloneDeep } from 'lodash'
 
 export interface IOption {
   /** 描述 */
   description: Description | Description[]
   /** 描述控制器，在遍历描述信息时，会调用该回调 */
-  controller?: (ParticleItem: ParticleItem) => void
+  controller?: (ParticleItem: ParticleItem, status?: CallbackStatusParam) => void
 }
 
 class Particle {
@@ -18,14 +18,18 @@ class Particle {
       throw new Error(`Invaild description field, description is ${description}`)
     }
     this.#controller = controller
-    this.#particle = descriptionToParticle(description, this, controller)
+    this.#particle = descriptionToParticle(description, this, controller, {
+      type: 'append'
+    })
   }
   append(key: string, description: Description | Description[], order?: number) {
     const parent = this.#particle.flatParticle[key]
     const lastParticleOrder = parent ? getLastParticleOrder(parent) : -1
     if (parent && lastParticleOrder >= 0) {
       const formatDesc = Array.isArray(description) ? description : [description]
+      // 对配置进行格式化
       const { particleTree: appendParticleTree, flatParticle: appendFlatParticle, particles: appendParticles } = descriptionToParticle(formatDesc, this)
+      // 将配置插入到指定父节点中
       parent.children = parent.children || []
       const parentChildLen = parent.children.length
       order = order !== undefined && parentChildLen && order < parentChildLen ? order : parent.children.length
@@ -41,6 +45,9 @@ class Particle {
           order: -1
         }
       })
+      // 新增配置的key
+      const appendParticleKeys: string[] = []
+      // 重新遍历已经解析的配置，将新增配置的子节点layer信息更正
       forFun(appendParticles, item => {
         const itemParticleExtra = item[PARTICLE_FLAG]
         const { parent, layer: itemLayer } = itemParticleExtra
@@ -48,37 +55,41 @@ class Particle {
           const itemParent = appendFlatParticle[parent]
           const itemParentParticleExtra = itemParent![PARTICLE_FLAG]
           const { layer: parentLayer } = itemParentParticleExtra
-          // 更正layer字段
           const newItemLayer = `${parentLayer.slice(0, parentLayer.lastIndexOf('-'))}-${itemLayer.slice(itemLayer.lastIndexOf('-') + 1)}`
           itemParticleExtra.layer = newItemLayer
         }
+        appendParticleKeys.push(item.key)
       })
+      // 新增的节点插入有序的字段集合中
       this.#particle.particles.splice(lastParticleOrder + 1, 0, ...appendParticles)
+      // 重新对所有字段进行排序
       forFun(this.#particle.particles, (item, index) => {
         item[PARTICLE_FLAG].order = index
       })
       // 合并新增数据到打平树中
       Object.assign(this.#particle.flatParticle, appendFlatParticle)
+      const callbackStatus: CallbackStatusParam = {
+        type: 'append',
+        operationKey: [key],
+        relatKey: appendParticleKeys
+      }
+      // 调用回调函数
       forFun(appendParticles, item => {
-        this.#controller && this.#controller(item)
+        this.#controller && this.#controller(item, callbackStatus)
       })
     }
   }
   remove(keys: string[]) {
-    forFun(keys, key => {
+    const allKeys = getAllKeyByFlatParticle(keys, this.#particle.flatParticle)
+    forFun(allKeys, key => {
       const flatParticle = this.#particle.flatParticle
       const item = flatParticle[key]
       if (item) {
         const particleExtra = item[PARTICLE_FLAG]
-        const { parent, index, order } = particleExtra
+        const { parent, index } = particleExtra
         const parentItem = flatParticle[parent]
         if (parentItem) {
           parentItem.children!.splice(index, 1)
-          delete flatParticle[key]
-          this.#particle.particles.splice(order, 1)
-          forFun(this.#particle.particles, (item, index) => {
-            item[PARTICLE_FLAG].order = index
-          })
           forFun(parentItem.children!, (item, index) => {
             const particleExtra = item[PARTICLE_FLAG]
             const { layer } = particleExtra
@@ -89,7 +100,18 @@ class Particle {
             }
           })
         }
+        this.#controller &&
+          this.#controller(item, {
+            type: 'remove',
+            operationKey: keys,
+            relatKey: keys
+          })
+        delete flatParticle[key]
       }
+    })
+    this.#particle.particles = this.#particle.particles.filter(item => allKeys.indexOf(item.key) === -1)
+    forFun(this.#particle.particles, (item, index) => {
+      item[PARTICLE_FLAG].order = index
     })
   }
   setItem(key: string, data: Record<string, any>) {

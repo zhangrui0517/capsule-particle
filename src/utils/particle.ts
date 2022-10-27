@@ -1,5 +1,5 @@
 import { IOption } from '..'
-import { Description, FlatParticle, ParticleInfo, ParticleItem } from '../types'
+import { Description, FlatParticle, ParticleInfo, ParticleItem, CallbackStatusParam } from '../types'
 import { PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP, forFun } from '.'
 import Particle from '../'
 import { cloneDeep } from 'lodash'
@@ -9,7 +9,7 @@ import { cloneDeep } from 'lodash'
  * @param description 描述信息
  * @param callback 回调处理
  */
-export function descriptionToParticle(description: Description | Description[], Particle: Particle, callback?: IOption['controller']): ParticleInfo {
+export function descriptionToParticle(description: Description | Description[], Particle: Particle, callback?: IOption['controller'], callbackStatus?: CallbackStatusParam): ParticleInfo {
   const formatdescription = Array.isArray(description) ? cloneDeep(description) : [cloneDeep(description)]
   // 记录打平信息
   const flatParticle: FlatParticle = {}
@@ -33,18 +33,16 @@ export function descriptionToParticle(description: Description | Description[], 
       break
     }
     const { parent, index, layer } = auxiliary
-    const result = normalizeDesc(currentDesc, {
-      ParticleExtra: {
-        parent,
-        index,
-        layer,
-        order: ergodicOrder
-      },
-      flatParticle,
-      Particle,
-      callback
-    })
+    currentDesc[PARTICLE_FLAG] = {
+      parent,
+      index,
+      layer,
+      order: ergodicOrder
+    }
+    bindParticleFunToDesc(currentDesc as ParticleItem, Particle)
+    flatParticle[currentDesc.key] = currentDesc as ParticleItem
     particles.push(currentDesc as ParticleItem)
+    const result = callback && callback(currentDesc as ParticleItem, callbackStatus)
     if (result !== undefined && !result) {
       break
     }
@@ -65,24 +63,6 @@ export function descriptionToParticle(description: Description | Description[], 
     particleTree: formatdescription as ParticleInfo['particleTree'],
     particles
   }
-}
-
-/** 格式化配置 */
-export function normalizeDesc(
-  desc: Description,
-  normalizeInfo: {
-    ParticleExtra?: ParticleItem['__particle']
-    Particle?: Particle
-    flatParticle?: FlatParticle
-    callback?: IOption['controller']
-  }
-) {
-  const { Particle, ParticleExtra, flatParticle, callback } = normalizeInfo
-  desc[PARTICLE_FLAG] = ParticleExtra ? ParticleExtra : desc[PARTICLE_FLAG]
-  Particle && bindParticleFunToDesc(desc as ParticleItem, Particle)
-  flatParticle && (flatParticle[desc.key] = desc as ParticleItem)
-  const result = callback && callback(desc as ParticleItem)
-  return result
 }
 
 /** 将Particle实例的方法，绑定到每个字段上，预先填充部分调用信息 */
@@ -121,6 +101,7 @@ export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
   })
 }
 
+/** 获取指定配置中最后一个遍历的节点 */
 export function getLastParticleOrder(particleItem: ParticleItem, limit?: number) {
   const children = particleItem.children
   if (!children?.length) {
@@ -138,4 +119,21 @@ export function getLastParticleOrder(particleItem: ParticleItem, limit?: number)
     }
   }
   return order
+}
+
+/** 获取指定key及其子集key的集合 */
+export function getAllKeyByFlatParticle(keys: string[] | string, flatPartilce: FlatParticle) {
+  const formatKey = Array.isArray(keys) ? keys : [keys]
+  const result: string[] = []
+  const quoto = formatKey.slice()
+  while (quoto[0]) {
+    const key = quoto.shift() as string
+    const particleItem = flatPartilce[key]!
+    const children = particleItem.children
+    if (children?.length) {
+      quoto.push(...children.map(item => item.key))
+    }
+    result.push(key)
+  }
+  return result
 }
