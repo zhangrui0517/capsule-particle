@@ -104,7 +104,7 @@ class Particle {
           this.#controller(item, {
             type: 'remove',
             operationKey: keys,
-            relatKey: keys
+            relatKey: allKeys
           })
         delete flatParticle[key]
       }
@@ -123,6 +123,12 @@ class Particle {
       }
       const cloneData = cloneDeep(data)
       Object.assign(item, cloneData)
+      this.#controller &&
+        this.#controller(item, {
+          type: 'setItem',
+          operationKey: [key],
+          relatKey: [key]
+        })
       return true
     } else {
       console.error(`Cannot find element to set, key is ${key}`)
