@@ -154,12 +154,42 @@ class Particle {
   replace(key: string, description: Description) {
     const replaceItem = this.#particle.flatParticle[key]
     if (replaceItem) {
-      const { parent, index } = replaceItem[PARTICLE_FLAG]
+      // 对配置进行格式化
+      const { particleTree: replaceParticleTree, flatParticle: replaceFlatParticle, particles: replaceParticles } = descriptionToParticle(description, this)
+      const { parent, index, order } = replaceItem[PARTICLE_FLAG]
+      const replaceItemExtra = replaceItem[PARTICLE_FLAG]
       const parentItem = this.#particle.flatParticle[parent]
-      const cloneDescription = cloneDeep(description)
-      cloneDescription[PARTICLE_FLAG] = replaceItem[PARTICLE_FLAG]
-      parentItem!.children!.splice(index, 1, cloneDescription)
-      this.#particle.flatParticle[key] = cloneDescription as ParticleItem
+      if (parentItem) {
+        this.remove([key])
+        const currentItem = replaceParticleTree[0]!
+        currentItem[PARTICLE_FLAG] = replaceItemExtra
+        const replaceParticleKeys: string[] = []
+        forFun(replaceParticles, particleItem => {
+          const { key: itemKey, index } = particleItem
+          if (itemKey !== currentItem.key) {
+            const { parent } = particleItem[PARTICLE_FLAG]
+            const itemParent = replaceFlatParticle[parent]!
+            const itemParentParticleExtra = itemParent[PARTICLE_FLAG]
+            const { layer: itemParentLayer } = itemParentParticleExtra
+            particleItem[PARTICLE_FLAG].layer = `${itemParentLayer}-${index}`
+          }
+          replaceParticleKeys.push(itemKey)
+        })
+        this.#particle.particles.splice(order, 1, ...replaceParticles)
+        forFun(this.#particle.particles, (particleItem, index) => {
+          particleItem[PARTICLE_FLAG].order = index
+        })
+        this.#controller &&
+          forFun(replaceParticles, particleItem => {
+            this.#controller!(particleItem, {
+              type: 'replace',
+              operationKey: [key],
+              relatKey: replaceParticleKeys
+            })
+          })
+        parentItem.children!.splice(index, 1, currentItem)
+        Object.assign(this.#particle.flatParticle, replaceFlatParticle)
+      }
     } else {
       throw new Error(`The element to be replaced does not exist, key is ${key}`)
     }

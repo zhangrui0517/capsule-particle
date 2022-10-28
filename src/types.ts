@@ -32,7 +32,7 @@ export type ParticleInfo = {
   /** 字段信息映射表 */
   flatParticle: FlatParticle
   /** 处理后的字段树 */
-  particleTree: ParticleItem | ParticleItem[]
+  particleTree: ParticleItem[]
   /** 按遍历顺序的字段集合 */
   particles: ParticleItem[]
 }
