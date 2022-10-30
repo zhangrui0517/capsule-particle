@@ -34,7 +34,8 @@
 			"npx eslint --cache --fix"
 		]
 	},
-	"dependencies": {
+	"dependencies": {},
+	"peerDependencies": {
 		"lodash": "^4.17.21"
 	}
 }
