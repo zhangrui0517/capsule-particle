@@ -164,21 +164,25 @@ class Particle {
       return false
     }
   }
-  getItem(keys?: string[], dataType: 'object' | 'array' = 'object') {
+  getItem(keys?: string | string[], dataType: 'object' | 'array' = 'object') {
     if (!this.#particle) {
       return
     }
     if (!keys) {
       return dataType === 'object' ? this.#particle.flatParticle : Object.values(this.#particle.flatParticle)
     }
-    const result: FlatParticle | Record<string, undefined> = {}
-    forFun(keys, key => {
-      const item = this.#particle.flatParticle[key]
-      if (item) {
-        result[key] = item
-      }
-    })
-    return dataType === 'object' ? result : Object.values(result)
+    if (Array.isArray(keys)) {
+      const result: FlatParticle | Record<string, undefined> = {}
+      forFun(keys, key => {
+        const item = this.#particle.flatParticle[key]
+        if (item) {
+          result[key] = item
+        }
+      })
+      return dataType === 'object' ? result : Object.values(result)
+    } else {
+      return this.#particle.flatParticle[keys]
+    }
   }
   getParticle() {
     return this.#particle.particleTree
