@@ -73,7 +73,7 @@ export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
     switch (funName) {
       case 'append':
         descFun = (description: Description, order?: number) => {
-          return Particle[funName](desc.key, description, null, order)
+          return Particle[funName](desc.key, description, undefined, order)
         }
         break
       case 'remove':
