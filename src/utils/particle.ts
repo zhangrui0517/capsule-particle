@@ -9,7 +9,16 @@ import { cloneDeep } from 'lodash'
  * @param description 描述信息
  * @param callback 回调处理
  */
-export function descriptionToParticle(description: Description | Description[], Particle: Particle, callback?: IOption['controller'], callbackStatus?: CallbackStatusParam): ParticleInfo {
+export function descriptionToParticle(
+  description: Description | Description[],
+  options: {
+    Particle: Particle
+    callback?: IOption['controller']
+    callbackStatus?: CallbackStatusParam
+    bindOperationWithParticle?: boolean
+  }
+): ParticleInfo {
+  const { callback, callbackStatus, Particle, bindOperationWithParticle } = options || {}
   const formatdescription = Array.isArray(description) ? cloneDeep(description) : [cloneDeep(description)]
   // 记录打平信息
   const flatParticle: FlatParticle = (Particle.getItem() as FlatParticle) || {}
@@ -39,7 +48,7 @@ export function descriptionToParticle(description: Description | Description[], 
       layer,
       order: ergodicOrder
     }
-    bindParticleFunToDesc(currentDesc as ParticleItem, Particle)
+    bindOperationWithParticle && bindParticleFunToDesc(currentDesc as ParticleItem, Particle)
     flatParticle[currentDesc.key] = currentDesc as ParticleItem
     particles.push(currentDesc as ParticleItem)
     const result = callback && callback(currentDesc as ParticleItem, callbackStatus)
@@ -73,7 +82,7 @@ export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
     switch (funName) {
       case 'append':
         descFun = (description: Description, order?: number) => {
-          return Particle[funName](desc.key, description, undefined, order)
+          return Particle[funName](desc.key, description, { order })
         }
         break
       case 'remove':

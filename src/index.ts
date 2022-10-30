@@ -7,28 +7,55 @@ export interface IOption {
   description: Description | Description[]
   /** 描述控制器，在遍历描述信息时，会调用该回调 */
   controller?: (ParticleItem: ParticleItem, status?: CallbackStatusParam) => void
+  /** 是否为每个元素绑定实例方法，默认为false */
+  bindOperationWithParticle?: boolean
 }
 
 class Particle {
   #particle: ParticleInfo
   #controller: IOption['controller']
+  #option: Omit<IOption, 'description' | 'controller'>
   constructor(options: IOption) {
-    const { description, controller } = options
+    const { description, controller, bindOperationWithParticle = false } = options
     if (!description) {
       throw new Error(`Invaild description field, description is ${description}`)
     }
     this.#controller = controller
-    this.#particle = descriptionToParticle(description, this, controller, {
-      type: 'init'
+    this.#option = {
+      bindOperationWithParticle
+    }
+    this.#particle = descriptionToParticle(description, {
+      Particle: this,
+      callback: controller,
+      callbackStatus: {
+        type: 'init'
+      },
+      bindOperationWithParticle
     })
   }
-  append(key: string, description: Description | Description[], callbackStatus?: CallbackStatusParam, order?: number) {
+  append(
+    key: string,
+    description: Description | Description[],
+    options?: {
+      callbackStatus?: CallbackStatusParam
+      order?: number
+    }
+  ) {
+    const { callbackStatus } = options || {}
+    let { order } = options || {}
     const parent = this.#particle.flatParticle[key]
     const lastParticleOrder = parent ? getLastParticleOrder(parent) : -1
     if (parent && lastParticleOrder >= 0) {
       const formatDesc = Array.isArray(description) ? description : [description]
       // 对配置进行格式化
-      const { particleTree: appendParticleTree, flatParticle: appendFlatParticle, particles: appendParticles } = descriptionToParticle(formatDesc, this)
+      const {
+        particleTree: appendParticleTree,
+        flatParticle: appendFlatParticle,
+        particles: appendParticles
+      } = descriptionToParticle(formatDesc, {
+        Particle: this,
+        bindOperationWithParticle: this.#option['bindOperationWithParticle']
+      })
       // 将配置插入到指定父节点中
       parent.children = parent.children || []
       const parentChildLen = parent.children.length
@@ -161,15 +188,13 @@ class Particle {
     if (replaceItem) {
       const { parent, order } = replaceItem[PARTICLE_FLAG]
       this.remove([key])
-      this.append(
-        parent,
-        description,
-        {
+      this.append(parent, description, {
+        order,
+        callbackStatus: {
           type: 'remove',
           operationKey: [key]
-        },
-        order
-      )
+        }
+      })
     } else {
       throw new Error(`The element to be replaced does not exist, key is ${key}`)
     }
