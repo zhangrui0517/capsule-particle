@@ -191,7 +191,7 @@ class Particle {
       this.append(parent, description, {
         order,
         callbackStatus: {
-          type: 'remove',
+          type: 'replace',
           operationKey: [key]
         }
       })
