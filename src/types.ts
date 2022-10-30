@@ -45,4 +45,6 @@ export type CallbackStatusParam = {
   operationKey?: string[]
   /** 关联的节点 */
   relatKey?: string[]
+  /** 操作/传入的数据 */
+  data?: Record<string, any>
 }

@@ -19,10 +19,10 @@ class Particle {
     }
     this.#controller = controller
     this.#particle = descriptionToParticle(description, this, controller, {
-      type: 'append'
+      type: 'init'
     })
   }
-  append(key: string, description: Description | Description[], order?: number) {
+  append(key: string, description: Description | Description[], callbackStatus?: CallbackStatusParam, order?: number) {
     const parent = this.#particle.flatParticle[key]
     const lastParticleOrder = parent ? getLastParticleOrder(parent) : -1
     if (parent && lastParticleOrder >= 0) {
@@ -68,14 +68,15 @@ class Particle {
       })
       // 合并新增数据到打平树中
       Object.assign(this.#particle.flatParticle, appendFlatParticle)
-      const callbackStatus: CallbackStatusParam = {
+      const currentCallbackStatus: CallbackStatusParam = {
         type: 'append',
         operationKey: [key],
-        relatKey: appendParticleKeys
+        relatKey: appendParticleKeys,
+        ...callbackStatus
       }
       // 调用回调函数
       forFun(appendParticles, item => {
-        this.#controller && this.#controller(item, callbackStatus)
+        this.#controller && this.#controller(item, currentCallbackStatus)
       })
     }
   }
@@ -127,7 +128,8 @@ class Particle {
         this.#controller(item, {
           type: 'setItem',
           operationKey: [key],
-          relatKey: [key]
+          relatKey: [key],
+          data
         })
       return true
     } else {
@@ -136,6 +138,9 @@ class Particle {
     }
   }
   getItem(keys?: string[], dataType: 'object' | 'array' = 'object') {
+    if (!this.#particle) {
+      return
+    }
     if (!keys) {
       return dataType === 'object' ? this.#particle.flatParticle : Object.values(this.#particle.flatParticle)
     }
@@ -154,42 +159,17 @@ class Particle {
   replace(key: string, description: Description) {
     const replaceItem = this.#particle.flatParticle[key]
     if (replaceItem) {
-      // 对配置进行格式化
-      const { particleTree: replaceParticleTree, flatParticle: replaceFlatParticle, particles: replaceParticles } = descriptionToParticle(description, this)
-      const { parent, index, order } = replaceItem[PARTICLE_FLAG]
-      const replaceItemExtra = replaceItem[PARTICLE_FLAG]
-      const parentItem = this.#particle.flatParticle[parent]
-      if (parentItem) {
-        this.remove([key])
-        const currentItem = replaceParticleTree[0]!
-        currentItem[PARTICLE_FLAG] = replaceItemExtra
-        const replaceParticleKeys: string[] = []
-        forFun(replaceParticles, particleItem => {
-          const { key: itemKey, index } = particleItem
-          if (itemKey !== currentItem.key) {
-            const { parent } = particleItem[PARTICLE_FLAG]
-            const itemParent = replaceFlatParticle[parent]!
-            const itemParentParticleExtra = itemParent[PARTICLE_FLAG]
-            const { layer: itemParentLayer } = itemParentParticleExtra
-            particleItem[PARTICLE_FLAG].layer = `${itemParentLayer}-${index}`
-          }
-          replaceParticleKeys.push(itemKey)
-        })
-        this.#particle.particles.splice(order, 1, ...replaceParticles)
-        forFun(this.#particle.particles, (particleItem, index) => {
-          particleItem[PARTICLE_FLAG].order = index
-        })
-        this.#controller &&
-          forFun(replaceParticles, particleItem => {
-            this.#controller!(particleItem, {
-              type: 'replace',
-              operationKey: [key],
-              relatKey: replaceParticleKeys
-            })
-          })
-        parentItem.children!.splice(index, 1, currentItem)
-        Object.assign(this.#particle.flatParticle, replaceFlatParticle)
-      }
+      const { parent, order } = replaceItem[PARTICLE_FLAG]
+      this.remove([key])
+      this.append(
+        parent,
+        description,
+        {
+          type: 'remove',
+          operationKey: [key]
+        },
+        order
+      )
     } else {
       throw new Error(`The element to be replaced does not exist, key is ${key}`)
     }

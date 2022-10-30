@@ -12,7 +12,7 @@ import { cloneDeep } from 'lodash'
 export function descriptionToParticle(description: Description | Description[], Particle: Particle, callback?: IOption['controller'], callbackStatus?: CallbackStatusParam): ParticleInfo {
   const formatdescription = Array.isArray(description) ? cloneDeep(description) : [cloneDeep(description)]
   // 记录打平信息
-  const flatParticle: FlatParticle = {}
+  const flatParticle: FlatParticle = (Particle.getItem() as FlatParticle) || {}
   // 按顺序记录字段信息
   const particles: ParticleItem[] = []
   // 遍历队列
@@ -73,7 +73,7 @@ export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
     switch (funName) {
       case 'append':
         descFun = (description: Description, order?: number) => {
-          return Particle[funName](desc.key, description, order)
+          return Particle[funName](desc.key, description, null, order)
         }
         break
       case 'remove':
