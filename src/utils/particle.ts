@@ -2,7 +2,7 @@ import { IOption } from '..'
 import { Description, FlatParticle, ParticleInfo, ParticleItem, CallbackStatusParam } from '../types'
 import { PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP, forFun } from '.'
 import Particle from '../'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 
 /**
  * 处理描述信息，建立父子级关系，并打平信息
@@ -15,17 +15,19 @@ export function descriptionToParticle(
     Particle: Particle
     callback?: IOption['controller']
     callbackStatus?: CallbackStatusParam
-    bindOperationWithParticle?: boolean
+    bindOperationWithParticle?: IOption['bindOperationWithParticle']
+    cloneDeepDesc: IOption['cloneDeepDesc']
   }
 ): ParticleInfo {
-  const { callback, callbackStatus, Particle, bindOperationWithParticle } = options || {}
-  const formatdescription = Array.isArray(description) ? cloneDeep(description) : [cloneDeep(description)]
+  const { callback, callbackStatus, Particle, bindOperationWithParticle, cloneDeepDesc } = options || {}
+  const cloneDeepDescription = cloneDeepDesc ? cloneDeep(description) : description
+  const formatDescription = Array.isArray(cloneDeepDescription) ? cloneDeepDescription : [cloneDeepDescription]
   // 记录打平信息
   const flatParticle: FlatParticle = (Particle.getItem() as FlatParticle) || {}
   // 按顺序记录字段信息
   const particles: ParticleItem[] = []
   // 遍历队列
-  let queue: Description[] = formatdescription.slice(0)
+  let queue: Description[] = formatDescription.slice(0)
   // 辅助队列，用于记录队列中字段的额外数据
   let auxiliaryQueue: Array<Record<string, any>> = queue.map((_item, index, arr) => ({
     parent: PARTICLE_TOP,
@@ -69,7 +71,7 @@ export function descriptionToParticle(
 
   return {
     flatParticle,
-    particleTree: formatdescription as ParticleInfo['particleTree'],
+    particleTree: formatDescription as ParticleInfo['particleTree'],
     particles
   }
 }

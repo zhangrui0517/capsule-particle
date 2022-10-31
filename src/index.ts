@@ -9,6 +9,8 @@ export interface IOption {
   controller?: (ParticleItem: ParticleItem, status?: CallbackStatusParam) => void
   /** 是否为每个元素绑定实例方法，默认为false */
   bindOperationWithParticle?: boolean
+  /** 是否对配置进行深拷贝，默认为false */
+  cloneDeepDesc?: boolean
 }
 
 class Particle {
@@ -16,13 +18,14 @@ class Particle {
   #controller: IOption['controller']
   #option: Omit<IOption, 'description' | 'controller'>
   constructor(options: IOption) {
-    const { description, controller, bindOperationWithParticle = false } = options
+    const { description, controller, bindOperationWithParticle = false, cloneDeepDesc = false } = options
     if (!description) {
       throw new Error(`Invaild description field, description is ${description}`)
     }
     this.#controller = controller
     this.#option = {
-      bindOperationWithParticle
+      bindOperationWithParticle,
+      cloneDeepDesc
     }
     this.#particle = descriptionToParticle(description, {
       Particle: this,
@@ -30,7 +33,8 @@ class Particle {
       callbackStatus: {
         type: 'init'
       },
-      bindOperationWithParticle
+      bindOperationWithParticle,
+      cloneDeepDesc
     })
   }
   append(
@@ -54,7 +58,8 @@ class Particle {
         particles: appendParticles
       } = descriptionToParticle(formatDesc, {
         Particle: this,
-        bindOperationWithParticle: this.#option['bindOperationWithParticle']
+        bindOperationWithParticle: this.#option['bindOperationWithParticle'],
+        cloneDeepDesc: this.#option['cloneDeepDesc']
       })
       // 将配置插入到指定父节点中
       parent.children = parent.children || []
