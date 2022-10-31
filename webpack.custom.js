@@ -15,6 +15,9 @@ const config = {
         type: 'umd'
       }
     }
+    webpackConfig.externals = {
+      lodash: 'lodash'
+    }
     webpackConfig.optimization.splitChunks = false
     if (webpackConfig.mode === 'production') {
       webpackConfig.plugins = webpackConfig.plugins.filter(plugin => plugin.constructor.name !== 'HtmlWebpackPlugin')

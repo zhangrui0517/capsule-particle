@@ -35,7 +35,8 @@
 		]
 	},
 	"dependencies": {},
-	"peerDependencies": {
+	"peerDependencies": {},
+	"optionalDependencies": {
 		"lodash": "^4.17.21"
 	}
 }
