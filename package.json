@@ -1,42 +1,38 @@
 {
-	"name": "capsule-particle",
-	"version": "1.0.27",
-	"main": "./dist/index.js",
-	"repository": "https://github.com/zhangrui0517/capsule-particle.git",
-	"author": "zhangrui0517",
-	"license": "MIT",
-	"types": "./dist/index.d.ts",
-	"devDependencies": {
-		"@types/lodash": "^4.14.186",
-		"@typescript-eslint/eslint-plugin": "^5.38.0",
-		"@typescript-eslint/parser": "^5.38.0",
-		"capsule-pack": "^1.0.20",
-		"eslint": "^8.24.0",
-		"eslint-config-prettier": "^8.5.0",
-		"eslint-plugin-prettier": "^4.2.1",
-		"husky": "^8.0.1",
-		"lint-staged": "^13.0.3",
-		"prettier": "^2.7.1",
-		"typescript": "^4.8.3"
-	},
-	"scripts": {
-		"dev": "npx cpack dev",
-		"dev-server": "npx cpack dev-server",
-		"build": "npx cpack build",
-		"postbuild": "npx tsc",
-		"lint-staged": "lint-staged",
-		"lint": "npx eslint --cache --fix",
-		"prepublish": "yarn build"
-	},
-	"lint-staged": {
-		"./src/**/*.*": [
-			"npx prettier --write",
-			"npx eslint --cache --fix"
-		]
-	},
-	"dependencies": {},
-	"peerDependencies": {},
-	"optionalDependencies": {
-		"lodash": "^4.17.21"
-	}
+  "name": "capsule-particle",
+  "description": "$description$",
+  "version": "1.0.27",
+  "main": "./dist/index.js",
+  "repository": "https://github.com/zhangrui0517/capsule-particle.git",
+  "scripts": {
+    "prepare": "husky install",
+    "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,tsx,ts}": [
+      "npm run lint:script"
+    ]
+  },
+  "keywords": [],
+  "author": "zhangrui0517",
+  "license": "MIT",
+  "devDependencies": {
+    "@commitlint/cli": "^17.5.1",
+    "@commitlint/config-conventional": "^17.4.4",
+    "@types/lodash-es": "^4.17.7",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "commitlint": "^17.5.1",
+    "eslint": "^8.37.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.0",
+    "prettier": "^2.8.7",
+    "typescript": "^5.0.3",
+    "vite": "^4.2.1"
+  },
+  "optionalDependencies": {
+    "lodash-es": "^4.17.21"
+  }
 }

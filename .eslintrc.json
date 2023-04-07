@@ -1,9 +1,29 @@
 {
   "root": true,
-  "extends": ["./node_modules/capsule-pack/.eslintrc.json"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+		"prettier"
+  ],
+  "overrides": [],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
-    "prettier/prettier": "warn",
-    "quotes": "off",
+    "prettier/prettier": [
+			"error",
+			{
+				"endOfLine": "auto",
+				"linebreak": "windows",
+				"singleQuote": true
+			}
+		],
+    "semi": ["error", "never"],
     "@typescript-eslint/no-non-null-assertion": "off"
   }
 }

@@ -1,26 +1,9 @@
-# EditorConfig is awesome: https://EditorConfig.org
-# top-most EditorConfig file
-# 适用范围：跨编辑器和IDE编写代码，保持一致的简单编码风格
+root = true
 
-# special property that should be specified at the top of the file outside of any sections. Set to true to stop .editorconfig files search on current file.
-root = true 
-
-# Unix-style newlines with a newline ending every file
 [*]
-end_of_line = lf # set to lf, cr, or crlf to control how line breaks are represented.
-insert_final_newline = true # set to true to ensure file ends with a newline when saving and false to ensure it doesn't.
-
-# Indentation override for all JS under lib directory
-[**.{js,vue,ts,tsx,jsx}]
-charset = utf-8 # set to latin1, utf-8, utf-8-bom, utf-16be or utf-16le to control the character set.
-indent_style = space # set to tab or space to use hard tabs or soft tabs respectively.
-indent_size = 2 # use 2 spaces instead of tabs;
-trim_trailing_whitespace = true # remove trailing white space characters when saving
-
-[*.md]
-trim_trailing_whitespace = false
-
-# Matches the exact files either package.json or .travis.yml
-[{package.json,.travis.yml}]
-indent_style = space
+charset = utf-8
+indent_style = tab
 indent_size = 2
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
