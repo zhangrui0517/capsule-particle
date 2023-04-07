@@ -27,9 +27,11 @@
     /* 构建产物的规范 */
     "module": "ES2022",
     /* 生成声明文件，开启后会自动生成声明文件 */
-    "declaration": false,
+    "declaration": true,
+		/* 只生成类型文件 */
+		"emitDeclarationOnly": true,
     /* 构建输出目录 */
-    "outDir": "./lib",
+    "outDir": "./dist",
     /* 要构建的目录 */
     "rootDir": "./src",
     /* 是否不生成文件 */

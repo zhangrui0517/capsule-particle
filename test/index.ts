@@ -1,7 +1,7 @@
-import Particle, { IOption } from '../src'
+import Particle from '../dist'
 import { description } from './data'
 
-function controller(descItem: IOption['description']) {
+function controller(descItem) {
 	// console.log('descItem: ', descItem)
 	descItem
 }

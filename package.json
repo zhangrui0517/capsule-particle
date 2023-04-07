@@ -3,10 +3,13 @@
   "description": "$description$",
   "version": "1.0.27",
   "main": "./dist/index.js",
+	"types":"./dist/typing/index.d.ts",
   "repository": "https://github.com/zhangrui0517/capsule-particle.git",
   "scripts": {
     "prepare": "husky install",
-    "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./"
+    "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./",
+		"build": "vite build && tsc -p ./tsconfig.json",
+		"dev": "vite -c ./vite.test.ts"
   },
   "lint-staged": {
     "**/*.{js,jsx,tsx,ts}": [
