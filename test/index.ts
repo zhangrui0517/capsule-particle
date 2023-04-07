@@ -2,14 +2,14 @@ import Particle, { IOption } from '../src'
 import { description } from './data'
 
 function controller(descItem: IOption['description']) {
-  // console.log('descItem: ', descItem)
-  descItem
+	// console.log('descItem: ', descItem)
+	descItem
 }
 
 console.time('particleObj')
 const particleObj = new Particle({
-  description,
-  controller
+	description,
+	controller
 })
 console.timeEnd('particleObj')
 
