@@ -1,3 +1,5 @@
+import { PARTICLE_FLAG, PARTICLE_TOP } from '../src/utils'
+
 /** 描述信息 */
 export type Description = {
 	key: string
@@ -76,3 +78,6 @@ export default class Particle {
 	getParticle(): ParticleItem[]
 	replace(key: string, description: Description): void
 }
+
+export type PARTICLE_FLAG = PARTICLE_FLAG
+export type PARTICLE_TOP = PARTICLE_TOP
