@@ -1,13 +1,13 @@
+import { forEach } from 'lodash-es'
 import {
 	descriptionToParticle,
-	forFun,
 	PARTICLE_FLAG,
 	hasOwnProperty,
 	PARTICLE_TOP,
 	getLastParticleOrder,
 	getAllKeyByFlatParticle
 } from './utils'
-import { Description, ParticleInfo, FlatParticle, ParticleItem, CallbackStatusParam } from './types'
+import { Description, ParticleInfo, FlatParticle, ParticleItem, CallbackStatusParam } from '../typings/index'
 import { cloneDeep } from 'lodash-es'
 
 export interface IOption {
@@ -76,7 +76,7 @@ class Particle {
 			parent.children.splice(order, 0, ...(appendParticleTree as ParticleItem[]))
 			const particleExtra = parent[PARTICLE_FLAG]
 			// 对新插入的数据进行格式化，更正关联字段PARTICLE_FLAG中的数据
-			forFun(parent.children, (item, index) => {
+			forEach(parent.children, (item, index) => {
 				item[PARTICLE_FLAG] = {
 					parent: key,
 					index,
@@ -88,7 +88,7 @@ class Particle {
 			// 新增配置的key
 			const appendParticleKeys: string[] = []
 			// 重新遍历已经解析的配置，将新增配置的子节点layer信息更正
-			forFun(appendParticles, (item) => {
+			forEach(appendParticles, (item) => {
 				const itemParticleExtra = item[PARTICLE_FLAG]
 				const { parent, layer: itemLayer } = itemParticleExtra
 				if (parent !== key) {
@@ -105,7 +105,7 @@ class Particle {
 			// 新增的节点插入有序的字段集合中
 			this.#particle.particles.splice(lastParticleOrder + 1, 0, ...appendParticles)
 			// 重新对所有字段进行排序
-			forFun(this.#particle.particles, (item, index) => {
+			forEach(this.#particle.particles, (item, index) => {
 				item[PARTICLE_FLAG].order = index
 			})
 			// 合并新增数据到打平树中
@@ -117,14 +117,14 @@ class Particle {
 				...callbackStatus
 			}
 			// 调用回调函数
-			forFun(appendParticles, (item) => {
+			forEach(appendParticles, (item) => {
 				this.#controller && this.#controller(item, currentCallbackStatus)
 			})
 		}
 	}
 	remove(keys: string[]) {
 		const allKeys = getAllKeyByFlatParticle(keys, this.#particle.flatParticle)
-		forFun(allKeys, (key) => {
+		forEach(allKeys, (key) => {
 			const flatParticle = this.#particle.flatParticle
 			const item = flatParticle[key]
 			if (item) {
@@ -133,7 +133,7 @@ class Particle {
 				const parentItem = flatParticle[parent]
 				if (parentItem) {
 					parentItem.children!.splice(index, 1)
-					forFun(parentItem.children!, (item, index) => {
+					forEach(parentItem.children!, (item, index) => {
 						const particleExtra = item[PARTICLE_FLAG]
 						const { layer } = particleExtra
 						item[PARTICLE_FLAG] = {
@@ -153,7 +153,7 @@ class Particle {
 			}
 		})
 		this.#particle.particles = this.#particle.particles.filter((item) => allKeys.indexOf(item.key) === -1)
-		forFun(this.#particle.particles, (item, index) => {
+		forEach(this.#particle.particles, (item, index) => {
 			item[PARTICLE_FLAG].order = index
 		})
 	}
@@ -188,7 +188,7 @@ class Particle {
 		}
 		if (Array.isArray(keys)) {
 			const result: FlatParticle | Record<string, undefined> = {}
-			forFun(keys, (key) => {
+			forEach(keys, (key) => {
 				const item = this.#particle.flatParticle[key]
 				if (item) {
 					result[key] = item
@@ -220,6 +220,5 @@ class Particle {
 	}
 }
 
-export * from './types'
 export { PARTICLE_FLAG, PARTICLE_TOP }
 export default Particle

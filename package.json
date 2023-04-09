@@ -9,7 +9,7 @@
   "scripts": {
     "prepare": "husky install",
     "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./",
-    "build": "vite build && tsc -p ./tsconfig.json",
+    "build": "vite build",
     "dev": "vite -c ./vite.test.ts"
   },
   "lint-staged": {
@@ -35,7 +35,8 @@
     "lodash-es": "^4.17.21",
     "prettier": "^2.8.7",
     "typescript": "^5.0.3",
-    "vite": "^4.2.1"
+    "vite": "^4.2.1",
+    "vite-plugin-static-copy": "^0.13.1"
   },
   "peerDependencies": {
     "lodash-es": "^4.17.21"

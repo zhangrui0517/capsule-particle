@@ -29,17 +29,17 @@
     /* 生成声明文件，开启后会自动生成声明文件 */
     "declaration": true,
 		/* 只生成类型文件 */
-		"emitDeclarationOnly": true,
+		"emitDeclarationOnly": false,
     /* 构建输出目录 */
     "outDir": "./dist",
     /* 要构建的目录 */
     "rootDir": "./src",
     /* 是否不生成文件 */
-    "noEmit": false,
+    "noEmit": true,
     /* 模块解析 */
     "moduleResolution":"Node"
   },
-  "include": ["./src"],
+  "include": ["./src", "public", "typings/index.d.ts"],
   /* 不检查的目录 */
   "exclude": ["node_modules","./test", "./lib", "./dist", "./template"]
 }

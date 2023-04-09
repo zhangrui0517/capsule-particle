@@ -1,8 +1,8 @@
+import { cloneDeep, forEach } from 'lodash-es'
 import { IOption } from '..'
-import { Description, FlatParticle, ParticleInfo, ParticleItem, CallbackStatusParam } from '../types'
-import { PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP, forFun } from '.'
+import { Description, FlatParticle, ParticleInfo, ParticleItem, CallbackStatusParam } from '../../typings/index'
+import { PARTICLE_FLAG, hasOwnProperty, PARTICLE_TOP } from '.'
 import Particle from '../'
-import { cloneDeep } from 'lodash-es'
 
 /**
  * 处理描述信息，建立父子级关系，并打平信息
@@ -79,7 +79,7 @@ export function descriptionToParticle(
 /** 将Particle实例的方法，绑定到每个字段上，预先填充部分调用信息 */
 export function bindParticleFunToDesc(desc: ParticleItem, Particle: Particle) {
 	const particleFuns = ['append', 'remove', 'replace', 'setItem']
-	forFun(particleFuns, (funName) => {
+	forEach(particleFuns, (funName) => {
 		let descFun
 		switch (funName) {
 			case 'append':

@@ -48,3 +48,31 @@ export type CallbackStatusParam = {
 	/** 操作/传入的数据 */
 	data?: Record<string, any>
 }
+
+export interface IOption {
+	description: Description | Description[]
+	controller?: (ParticleItem: ParticleItem, status?: CallbackStatusParam) => void
+	bindOperationWithParticle?: boolean
+	cloneDeepDesc?: boolean
+}
+
+export default class Particle {
+	#private
+	constructor(options: IOption)
+	append(
+		key: string,
+		description: Description | Description[],
+		options?: {
+			callbackStatus?: CallbackStatusParam
+			order?: number
+		}
+	): void
+	remove(keys: string[]): void
+	setItem(key: string, data: Record<string, any>): boolean
+	getItem(
+		keys?: string | string[],
+		dataType?: 'object' | 'array'
+	): ParticleItem | FlatParticle | Record<string, undefined> | (ParticleItem | undefined)[] | undefined
+	getParticle(): ParticleItem[]
+	replace(key: string, description: Description): void
+}
