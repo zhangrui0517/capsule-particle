@@ -1,13 +1,13 @@
 {
   "name": "capsule-particle",
   "description": "$description$",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "repository": "https://github.com/zhangrui0517/capsule-particle.git",
   "scripts": {
-		"prepublish": "pnpm build",
+    "prepublish": "pnpm build",
     "prepare": "husky install",
     "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./",
     "build": "vite build",
