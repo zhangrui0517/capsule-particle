@@ -17,9 +17,6 @@ specifiers:
   typescript: ^5.0.3
   vite: ^4.2.1
 
-optionalDependencies:
-  lodash-es: 4.17.21
-
 devDependencies:
   '@commitlint/cli': 17.5.1
   '@commitlint/config-conventional': 17.4.4
@@ -32,6 +29,7 @@ devDependencies:
   eslint-plugin-prettier: 4.2.1_ybb3aapb7235womryl2tm5ze2u
   husky: 8.0.3
   lint-staged: 13.2.0
+  lodash-es: 4.17.21
   prettier: 2.8.7
   typescript: 5.0.3
   vite: 4.2.1
@@ -1788,8 +1786,7 @@ packages:
   /lodash-es/4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
     requiresBuild: true
-    dev: false
-    optional: true
+    dev: true
 
   /lodash.camelcase/4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}

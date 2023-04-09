@@ -8,6 +8,14 @@ export default defineConfig({
 			formats: ['cjs', 'es', 'umd'],
 			name: 'capsule-particle',
 			fileName: 'index'
+		},
+		rollupOptions: {
+			external: ['lodash-es'],
+			output: {
+				globals: {
+					'lodash-es': '_'
+				}
+			}
 		}
 	}
 })

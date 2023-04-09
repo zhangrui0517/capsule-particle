@@ -3,13 +3,14 @@
   "description": "$description$",
   "version": "1.0.27",
   "main": "./dist/index.js",
-	"types":"./dist/typing/index.d.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/typings/index.d.ts",
   "repository": "https://github.com/zhangrui0517/capsule-particle.git",
   "scripts": {
     "prepare": "husky install",
     "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./",
-		"build": "vite build && tsc -p ./tsconfig.json",
-		"dev": "vite -c ./vite.test.ts"
+    "build": "vite build && tsc -p ./tsconfig.json",
+    "dev": "vite -c ./vite.test.ts"
   },
   "lint-staged": {
     "**/*.{js,jsx,tsx,ts}": [
@@ -31,11 +32,12 @@
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.0",
+    "lodash-es": "^4.17.21",
     "prettier": "^2.8.7",
     "typescript": "^5.0.3",
     "vite": "^4.2.1"
   },
-  "optionalDependencies": {
+  "peerDependencies": {
     "lodash-es": "^4.17.21"
   }
 }
