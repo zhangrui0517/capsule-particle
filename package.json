@@ -1,7 +1,7 @@
 {
   "name": "capsule-particle",
   "description": "$description$",
-  "version": "1.0.28",
+  "version": "1.0.29",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/typings/index.d.ts",
