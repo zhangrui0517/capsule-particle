@@ -7,6 +7,7 @@
   "types": "./dist/index.d.ts",
   "repository": "https://github.com/zhangrui0517/capsule-particle.git",
   "scripts": {
+		"prepublish": "pnpm build",
     "prepare": "husky install",
     "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./",
     "build": "vite build",

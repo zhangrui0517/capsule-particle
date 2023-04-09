@@ -79,5 +79,4 @@ export default class Particle {
 	replace(key: string, description: Description): void
 }
 
-export type PARTICLE_FLAG = PARTICLE_FLAG
-export type PARTICLE_TOP = PARTICLE_TOP
+export { PARTICLE_FLAG, PARTICLE_TOP }
