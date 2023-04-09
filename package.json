@@ -4,7 +4,7 @@
   "version": "1.0.29",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "types": "./dist/typings/index.d.ts",
+  "types": "./dist/index.d.ts",
   "repository": "https://github.com/zhangrui0517/capsule-particle.git",
   "scripts": {
     "prepare": "husky install",
