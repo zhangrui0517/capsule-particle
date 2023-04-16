@@ -11,11 +11,8 @@ export type Description = {
 	[key: string]: any
 }
 
-// export type ParticleOption = {
-// }
-
 /** 格式化后的元素 */
-export type ParticleItem = Description & {
+export interface ParticleItem extends Description {
 	__particle: {
 		/** 父级的key */
 		parent: string
@@ -46,3 +43,9 @@ export type PartialParticleItem = Description & {
 
 /** 描述控制器，在遍历描述信息时，会调用该回调 */
 export type Controller = (ParticleItem: ParticleItem) => void | false
+
+export type ParticleTree = ParticleItem
+
+export type FlatParticleTreeMap = Record<string, ParticleItem>
+
+export type FlatParticleTreeArr = Array<ParticleItem | null>

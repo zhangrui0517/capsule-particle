@@ -3,22 +3,22 @@ import { PARTICLE_TOP, PARTICLE_FLAG } from '.'
 import { cloneDeep } from './'
 import { forEach } from 'lodash-es'
 
-export function descriptionToParticle(
-	description: Description | Description[],
-	controller?: Controller
-): {
-	descTree: ParticleItem[]
-	flatDescTree: Record<string, ParticleItem>
-} {
+export function descriptionToParticle(description: Description | Description[], controller?: Controller) {
 	const cloneDescription = cloneDeep(description) as PartialParticleItem | PartialParticleItem[]
 	const formatDescription = Array.isArray(cloneDescription) ? cloneDescription : [cloneDescription]
-	const flatDescTree: Record<string, ParticleItem> = {}
+	const flatParticleMap: Record<string, ParticleItem> = {}
+	const flatParticleArr: ParticleItem[] = []
 	const queue = formatDescription.slice(0)
 	/** 遍历次数 */
 	let traverseCount = 0
 	while (queue.length) {
 		/** 如果为第一层 */
 		if (traverseCount === 0) {
+			flatParticleMap[PARTICLE_TOP] = {
+				key: PARTICLE_TOP,
+				children: formatDescription as ParticleItem[],
+				[PARTICLE_FLAG]: null
+			} as unknown as ParticleItem
 			forEach(formatDescription, (item, index) => {
 				item[PARTICLE_FLAG] = {
 					parent: PARTICLE_TOP,
@@ -32,9 +32,10 @@ export function descriptionToParticle(
 		__particle.order = traverseCount
 		const { layer: particleLayer } = __particle
 		traverseCount += 1
-		flatDescTree[currentDesc.key] = currentDesc as ParticleItem
+		flatParticleMap[currentDesc.key] = currentDesc as ParticleItem
+		flatParticleArr.push(currentDesc as ParticleItem)
 		controller && controller(currentDesc as ParticleItem)
-		if (currentDesc.children) {
+		if (currentDesc.children?.length) {
 			forEach(currentDesc.children, (item, index) => {
 				item.__particle = {
 					parent: currentDesc.key,
@@ -46,7 +47,24 @@ export function descriptionToParticle(
 		}
 	}
 	return {
-		descTree: formatDescription as ParticleItem[],
-		flatDescTree
+		particleTree: formatDescription as ParticleItem[],
+		flatParticleMap,
+		flatParticleArr
 	}
+}
+
+export function getAllChildrenByParticleItem(particle: ParticleItem): ParticleItem[] {
+	const result: ParticleItem[] = []
+	const children = particle.children
+	if (children?.length) {
+		let formatChildren = children.slice()
+		while (formatChildren.length) {
+			const currentParticle = formatChildren.shift()!
+			result.push(currentParticle)
+			if (currentParticle.children?.length) {
+				formatChildren = [...currentParticle.children, ...formatChildren]
+			}
+		}
+	}
+	return result
 }
