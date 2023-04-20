@@ -1,16 +1,57 @@
-import { Description, Controller, PartialParticleItem, ParticleItem } from '../../typings'
+import {
+	Description,
+	Controller,
+	PartialParticleItem,
+	ParticleItem,
+	FlatParticleTreeMap,
+	FlatParticleTreeArr
+} from '../../typings'
 import { PARTICLE_TOP, PARTICLE_FLAG } from '.'
 import { cloneDeep } from './'
 import { forEach } from 'lodash-es'
 
-export function descriptionToParticle(description: Description | Description[], controller?: Controller) {
-	const cloneDescription = cloneDeep(description) as PartialParticleItem | PartialParticleItem[]
+/** 为每一级节点收集子级元素 */
+export function _setParticleKeyToParent(
+	currentParentItem: PartialParticleItem,
+	flatPaticle: FlatParticleTreeMap,
+	accKey?: string
+) {
+	const { __particle, key } = currentParentItem
+	const { parent } = __particle
+	if (parent !== PARTICLE_TOP) {
+		const parentParticle = flatPaticle[parent!]!
+		parentParticle.__particle.children = parentParticle.__particle.children || []
+		if (accKey) {
+			parentParticle.__particle.children.push(accKey)
+		} else {
+			parentParticle.__particle.children.push(key)
+		}
+		_setParticleKeyToParent(parentParticle, flatPaticle, accKey || key)
+	}
+}
+
+export function descriptionToParticle(
+	description: Description | Description[],
+	controller?: Controller,
+	options: {
+		clone?: boolean
+		startOrder?: number
+	} = {
+		clone: true
+	}
+) {
+	const { clone, startOrder } = options
+	const cloneDescription = (clone ? cloneDeep(description) : description) as PartialParticleItem | PartialParticleItem[]
 	const formatDescription = Array.isArray(cloneDescription) ? cloneDescription : [cloneDescription]
-	const flatParticleMap: Record<string, ParticleItem> = {}
-	const flatParticleArr: ParticleItem[] = []
+	/** 打平树数据 */
+	const flatParticleMap: FlatParticleTreeMap = {}
+	/** 按遍历顺序排序的数据数组 */
+	const flatParticleArr: FlatParticleTreeArr = []
+	/** 记录每个元素的所有父级信息 */
+	const flatParticleParents: Record<string, string[]> = {}
 	const queue = formatDescription.slice(0)
 	/** 遍历次数 */
-	let traverseCount = 0
+	let traverseCount = startOrder || 0
 	while (queue.length) {
 		/** 如果为第一层 */
 		if (traverseCount === 0) {
@@ -27,13 +68,29 @@ export function descriptionToParticle(description: Description | Description[], 
 				}
 			})
 		}
+		/** 取出元素 */
 		const currentDesc = queue.shift()!
-		const { __particle } = currentDesc
+		/** __particle会提前遍历父级并置入数据中 */
+		const { __particle, key } = currentDesc
 		__particle.order = traverseCount
-		const { layer: particleLayer } = __particle
+		const { layer: particleLayer, parent } = __particle
+		/** 遍历次数累计 */
 		traverseCount += 1
+		/** 保存数据到打平数据中 */
 		flatParticleMap[currentDesc.key] = currentDesc as ParticleItem
+		/** 按遍历顺序将数据保存到数组中 */
 		flatParticleArr.push(currentDesc as ParticleItem)
+		const parents = flatParticleParents[parent!]
+		if (parents) {
+			flatParticleParents[key] = parents.concat([parent!])
+		} else {
+			flatParticleParents[key] = parent !== PARTICLE_TOP ? [parent!] : []
+		}
+		forEach(flatParticleParents[key], (parent) => {
+			flatParticleMap[parent]!.__particle.children = flatParticleMap[parent]!.__particle.children || []
+			flatParticleMap[parent]!.__particle.children!.push(key)
+		})
+		// _setParticleKeyToParent(currentDesc, flatParticleMap)
 		controller && controller(currentDesc as ParticleItem)
 		if (currentDesc.children?.length) {
 			forEach(currentDesc.children, (item, index) => {
@@ -42,7 +99,7 @@ export function descriptionToParticle(description: Description | Description[], 
 					index,
 					layer: `${particleLayer}-${index}`
 				}
-				queue.unshift(item)
+				queue.splice(index, 0, item)
 			})
 		}
 	}
@@ -53,6 +110,7 @@ export function descriptionToParticle(description: Description | Description[], 
 	}
 }
 
+/** 获取元素的所有子级数据 */
 export function getAllChildrenByParticleItem(particle: ParticleItem): ParticleItem[] {
 	const result: ParticleItem[] = []
 	const children = particle.children

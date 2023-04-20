@@ -22,6 +22,8 @@ export interface ParticleItem extends Description {
 		layer: string
 		/** 遍历顺序 */
 		order: number
+		/** 所有子级信息 */
+		children?: string[]
 	}
 	children?: Array<ParticleItem>
 }
@@ -37,6 +39,8 @@ export type PartialParticleItem = Description & {
 		layer?: string
 		/** 遍历顺序 */
 		order?: number
+		/** 所有子级信息 */
+		children?: string[]
 	}
 	children?: Array<PartialParticleItem>
 }
