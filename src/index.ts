@@ -6,6 +6,7 @@ class Particle {
 	#particle: ParticleItem[]
 	#flatParticleMap: FlatParticleTreeMap
 	#flatParticleArr: FlatParticleTreeArr
+	#controller?: Controller
 	constructor(description: Description | Description[], controller?: Controller) {
 		if (!description) {
 			throw new Error(`Invaild description field, description is ${description}`)
@@ -14,6 +15,7 @@ class Particle {
 		this.#particle = particleTree
 		this.#flatParticleMap = flatParticleMap
 		this.#flatParticleArr = flatParticleArr
+		this.#controller = controller
 	}
 	/** 获取整棵树 */
 	getParticle(
@@ -157,6 +159,56 @@ class Particle {
 				item!.__particle.order = index
 			})
 		}
+	}
+	/** 添加元素到指定位置 */
+	append(
+		key: string,
+		data: Description,
+		options?: {
+			order?: number
+			controller?: Controller
+		}
+	) {
+		const { order, controller } = options || {}
+		const cloneData = cloneDeep(data)
+		const parentParticle = this.getItem(key)
+		if (parentParticle) {
+			const {
+				key,
+				__particle: { order: parentOrder }
+			} = parentParticle
+			const oldParentParticleChildren = this.getAllChildren(key)!
+			const children = parentParticle.children!
+			parentParticle.children = parentParticle.children || []
+			if (order !== undefined) {
+				if (children[order]) {
+					children.splice(order, 0, cloneData)
+				} else {
+					children[order] = cloneData
+				}
+			} else {
+				children.push(cloneData)
+			}
+			const { flatParticleArr, flatParticleMap } = descriptionToParticle(
+				parentParticle,
+				controller || this.#controller,
+				{
+					clone: false,
+					startOrder: parentOrder
+				}
+			)
+			Object.assign(this.#flatParticleMap, flatParticleMap)
+			this.#flatParticleArr = this.#flatParticleArr
+				.slice(0, parentOrder)
+				.concat(flatParticleArr)
+				.concat(this.#flatParticleArr.slice(oldParentParticleChildren.length + 2))
+			forEach(this.#flatParticleArr, (item, index) => {
+				item!.__particle.order = index
+			})
+			return true
+		}
+		console.error('The specified particle does not exist, key is ', key)
+		return null
 	}
 }
 
