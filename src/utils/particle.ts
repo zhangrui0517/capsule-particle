@@ -10,26 +10,6 @@ import { PARTICLE_TOP, PARTICLE_FLAG } from '.'
 import { cloneDeep } from './'
 import { forEach } from 'lodash-es'
 
-/** 为每一级节点收集子级元素 */
-export function _setParticleKeyToParent(
-	currentParentItem: PartialParticleItem,
-	flatPaticle: FlatParticleTreeMap,
-	accKey?: string
-) {
-	const { __particle, key } = currentParentItem
-	const { parent } = __particle
-	if (parent !== PARTICLE_TOP) {
-		const parentParticle = flatPaticle[parent!]!
-		parentParticle.__particle.children = parentParticle.__particle.children || []
-		if (accKey) {
-			parentParticle.__particle.children.push(accKey)
-		} else {
-			parentParticle.__particle.children.push(key)
-		}
-		_setParticleKeyToParent(parentParticle, flatPaticle, accKey || key)
-	}
-}
-
 export function descriptionToParticle(
 	description: Description | Description[],
 	controller?: Controller,
@@ -47,8 +27,6 @@ export function descriptionToParticle(
 	const flatParticleMap: FlatParticleTreeMap = {}
 	/** 按遍历顺序排序的数据数组 */
 	const flatParticleArr: FlatParticleTreeArr = []
-	/** 记录每个元素的所有父级信息 */
-	const flatParticleParents: Record<string, string[]> = {}
 	const queue = formatDescription.slice(0)
 	/** 遍历次数 */
 	let traverseCount = startOrder || 0
@@ -71,27 +49,18 @@ export function descriptionToParticle(
 		/** 取出元素 */
 		const currentDesc = queue.shift()!
 		/** __particle会提前遍历父级并置入数据中 */
-		const { __particle, key } = currentDesc
+		const { __particle } = currentDesc
 		__particle.order = traverseCount
-		const { layer: particleLayer, parent } = __particle
+		const { layer: particleLayer } = __particle
 		/** 遍历次数累计 */
 		traverseCount += 1
 		/** 保存数据到打平数据中 */
 		flatParticleMap[currentDesc.key] = currentDesc as ParticleItem
 		/** 按遍历顺序将数据保存到数组中 */
 		flatParticleArr.push(currentDesc as ParticleItem)
-		const parents = flatParticleParents[parent!]
-		if (parents) {
-			flatParticleParents[key] = parents.concat([parent!])
-		} else {
-			flatParticleParents[key] = parent !== PARTICLE_TOP ? [parent!] : []
-		}
-		forEach(flatParticleParents[key], (parent) => {
-			flatParticleMap[parent]!.__particle.children = flatParticleMap[parent]!.__particle.children || []
-			flatParticleMap[parent]!.__particle.children!.push(key)
-		})
-		// _setParticleKeyToParent(currentDesc, flatParticleMap)
+		/** 交给外部回调处理 */
 		controller && controller(currentDesc as ParticleItem)
+		/** 处理子级 */
 		if (currentDesc.children?.length) {
 			forEach(currentDesc.children, (item, index) => {
 				item.__particle = {
