@@ -160,7 +160,10 @@ class Particle {
 			})
 		}
 	}
-	/** 添加元素到指定位置 */
+	/**
+	 * 添加元素到指定位置
+	 * todo 添加到顶层
+	 */
 	append(
 		key: string,
 		data: Description,
@@ -209,6 +212,51 @@ class Particle {
 		}
 		console.error('The specified particle does not exist, key is ', key)
 		return null
+	}
+	/**
+	 * 替换元素
+	 * todo 替换到顶层
+	 */
+	replace(
+		key: string,
+		data: Description,
+		options?: {
+			controller?: Controller
+		}
+	) {
+		const replaceParticleItem = this.getItem(key)
+		if (replaceParticleItem) {
+			this.remove(key)
+			const { controller } = options || {}
+			const {
+				__particle: { parent: replaceItemParent, index: replaceIndex }
+			} = replaceParticleItem
+			const parentParticle = this.getItem(replaceItemParent)!
+			const {
+				__particle: { order: parentOrder }
+			} = parentParticle
+			parentParticle.children![replaceIndex] = data as ParticleItem
+			const { flatParticleArr, flatParticleMap } = descriptionToParticle(
+				parentParticle,
+				controller || this.#controller,
+				{
+					clone: false,
+					startOrder: parentOrder
+				}
+			)
+			Object.assign(this.#flatParticleMap, flatParticleMap)
+			this.#flatParticleArr = this.#flatParticleArr
+				.slice(0, parentOrder)
+				.concat(flatParticleArr)
+				.concat(this.#flatParticleArr.slice(parentOrder + 1))
+			forEach(this.#flatParticleArr, (item, index) => {
+				item!.__particle.order = index
+			})
+			return true
+		} else {
+			console.error('The specified particle does not exist, key is ', key)
+			return null
+		}
 	}
 }
 
