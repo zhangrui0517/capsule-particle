@@ -76,20 +76,3 @@ export function descriptionToParticle(
 		flatParticleArr
 	}
 }
-
-/** 获取元素的所有子级数据 */
-export function getAllChildrenByParticleItem(particle: ParticleItem): ParticleItem[] {
-	const result: ParticleItem[] = []
-	const children = particle.children
-	if (children?.length) {
-		let formatChildren = children.slice()
-		while (formatChildren.length) {
-			const currentParticle = formatChildren.shift()!
-			result.push(currentParticle)
-			if (currentParticle.children?.length) {
-				formatChildren = [...currentParticle.children, ...formatChildren]
-			}
-		}
-	}
-	return result
-}

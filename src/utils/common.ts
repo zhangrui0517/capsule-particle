@@ -33,3 +33,31 @@ export function cloneDeep(data: object) {
 	Function.prototype.toJSON = undefined
 	return result
 }
+
+/** 获取树元素的所有子级数据 */
+export function getAllChildren<
+	T extends {
+		key: string
+		children?: T[]
+	}
+>(
+	treeElement: T,
+	options?: {
+		includeRoot?: boolean
+	}
+): T[] {
+	const { includeRoot } = options || {}
+	const result: T[] = includeRoot ? [treeElement] : []
+	const children = treeElement.children
+	if (children?.length) {
+		let formatChildren = children.slice()
+		while (formatChildren.length) {
+			const currentParticle = formatChildren.shift()!
+			result.push(currentParticle)
+			if (currentParticle.children?.length) {
+				formatChildren = [...currentParticle.children, ...formatChildren]
+			}
+		}
+	}
+	return result
+}

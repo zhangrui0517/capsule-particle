@@ -1,5 +1,5 @@
 import type { Controller, Description, ParticleItem, FlatParticleTreeMap, FlatParticleTreeArr } from '../typings'
-import { descriptionToParticle, cloneDeep, PARTICLE_FLAG, getAllChildrenByParticleItem, PARTICLE_TOP } from './utils'
+import { descriptionToParticle, cloneDeep, PARTICLE_FLAG, getAllChildren, PARTICLE_TOP } from './utils'
 import { forEach, merge } from 'lodash-es'
 
 class Particle {
@@ -114,7 +114,7 @@ class Particle {
 		const { clone } = options
 		const currentParticle = this.#flatParticleMap[key]
 		if (currentParticle) {
-			const allChildren = getAllChildrenByParticleItem(currentParticle)
+			const allChildren = getAllChildren(currentParticle)
 			return clone ? cloneDeep(allChildren) : allChildren
 		} else {
 			console.log('Unable to find the particle data, current key is ' + key)
@@ -124,8 +124,14 @@ class Particle {
 	/** 删除元素 */
 	remove(key: string | string[]) {
 		const keys = Array.isArray(key) ? key : [key]
+		if (keys.indexOf(PARTICLE_TOP) > -1) {
+			console.error('Deleting "__particleTop__" node is not allowed')
+			return
+		}
 		/** 修改标记，如果有效果，需要将flatParticleArr中的无效数据剔除 */
 		let hasChange = false
+		/** 待清除无效数据的children数据 */
+		const toBeFilterChildren: ParticleItem[][] = []
 		forEach(keys, (keyItem) => {
 			const deleteItem = this.getItem(keyItem)
 			if (deleteItem) {
@@ -135,16 +141,20 @@ class Particle {
 				/** 获取父级 */
 				const currentParentItem = this.getItem(parent)!
 				const { children, __particle: __parentPaticle } = currentParentItem
-				/** 从父级的children中删除 */
-				children!.splice(index, 1)
+				/** 从父级的children中删除，先置为null，可能同时删除的元素在同一个父级中 */
+				children![index] = null as unknown as ParticleItem
+				toBeFilterChildren.push(children!)
 				/** 顶层的children都是树的起点，无需重置index、layer */
 				if (parent !== PARTICLE_TOP) {
 					const { layer } = __parentPaticle
 					forEach(currentParentItem.children, (item, index) => {
-						Object.assign(item.__particle, {
-							index,
-							layer: `${layer}-${index}`
-						})
+						/** 待删除的元素会被置为null */
+						if (item) {
+							Object.assign(item.__particle, {
+								index,
+								layer: `${layer}-${index}`
+							})
+						}
 					})
 				}
 				/** 删除指定元素的所有子级 */
@@ -158,6 +168,15 @@ class Particle {
 				})
 			}
 		})
+		if (toBeFilterChildren) {
+			forEach(toBeFilterChildren, (filterItem) => {
+				forEach(filterItem, (item, index) => {
+					if (!item) {
+						filterItem.splice(index, 1)
+					}
+				})
+			})
+		}
 		if (hasChange) {
 			/** 清除无效的数据 */
 			this.#flatParticleArr = this.#flatParticleArr.filter((item) => item)
@@ -192,6 +211,12 @@ class Particle {
 			/** 新增到顶层节点中 */
 			if (key === PARTICLE_TOP) {
 				const children = parentParticle.children!
+				if (order !== undefined && order > children.length - 1) {
+					console.error(
+						'The order of the inserted element is not allowed to exceed the length of the current child collection'
+					)
+					return null
+				}
 				parentParticle.children = parentParticle.children || []
 				if (order !== undefined) {
 					if (children[order]) {
@@ -258,7 +283,6 @@ class Particle {
 	}
 	/**
 	 * 替换元素
-	 * todo 替换到顶层
 	 */
 	replace(
 		key: string,
@@ -267,29 +291,62 @@ class Particle {
 			controller?: Controller
 		}
 	) {
+		if (key === PARTICLE_TOP) {
+			console.error('Replacing __particleTop__ nodes is not allowed')
+			return null
+		}
 		const replaceParticleItem = this.getItem(key)
 		if (replaceParticleItem) {
+			const cloneData = cloneDeep(data)
+			/** 检查替换的元素中，是否存在与已有元素重复 */
+			const deleteKeys = getAllChildren(replaceParticleItem).map((item) => item.key)
+			let repeatKey = ''
+			const isRepeat = getAllChildren(data, { includeRoot: true })
+				.map((item) => item.key)
+				.some((key) => {
+					const result = deleteKeys.indexOf(key) === -1 && this.#flatParticleMap[key]
+					if (result) {
+						repeatKey = key
+					}
+					return result
+				})
+			if (isRepeat) {
+				console.error(`Replace element that overlaps with existing element, key is "${repeatKey}"`)
+				return null
+			}
+			/** 删除要替换的节点 */
 			this.remove(key)
 			const { controller } = options || {}
 			const {
-				__particle: { parent: replaceItemParent, index: replaceIndex }
+				__particle: { parent: replaceItemParentKey, index: replaceIndex }
 			} = replaceParticleItem
-			const parentParticle = this.getItem(replaceItemParent)!
-			parentParticle.children![replaceIndex] = data as ParticleItem
-			const { flatParticleArr, flatParticleMap } = descriptionToParticle(
-				parentParticle,
-				controller || this.#controller,
-				{
-					clone: false,
-					isFirst: false
-				}
-			)
-			Object.assign(this.#flatParticleMap, flatParticleMap)
-			const parentIndex = this.#flatParticleArr.indexOf(parentParticle)
-			this.#flatParticleArr = this.#flatParticleArr
-				.slice(0, parentIndex)
-				.concat(flatParticleArr)
-				.concat(this.#flatParticleArr.slice(parentIndex + 1))
+			const parentParticle = this.getItem(replaceItemParentKey)!
+			/** 父级为顶层元素处理 */
+			if (replaceItemParentKey === PARTICLE_TOP) {
+				const { flatParticleArr, flatParticleMap } = descriptionToParticle(cloneData, controller || this.#controller, {
+					clone: false
+				})
+				parentParticle.children!.splice(replaceIndex, 0, cloneData)
+				/** 去除顶层信息后，合并到当前打平信息中 */
+				delete flatParticleMap[PARTICLE_TOP]
+				this.#flatParticleArr.splice(replaceIndex, 0, ...flatParticleArr)
+			} else {
+				/** 将替换元素置入对应位置 */
+				parentParticle.children!.splice(replaceIndex, 0, cloneData)
+				/** 将新增节点置入当前树中一起格式化 */
+				const { flatParticleArr, flatParticleMap } = descriptionToParticle(
+					parentParticle,
+					controller || this.#controller,
+					{
+						clone: false,
+						isFirst: false
+					}
+				)
+				Object.assign(this.#flatParticleMap, flatParticleMap)
+				/** 将新增节点按顺序添加到flatParticleArr中 */
+				const parentIndex = this.#flatParticleArr.indexOf(parentParticle)
+				this.#flatParticleArr.splice(parentIndex, 1, ...flatParticleArr)
+			}
 			return true
 		} else {
 			console.error('The specified particle does not exist, key is ', key)
