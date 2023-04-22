@@ -1,4 +1,4 @@
-import Particle, { Description } from '../dist'
+import Particle, { Description } from '../src'
 import { description } from './data'
 
 function controller(descItem: Description) {
