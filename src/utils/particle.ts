@@ -15,12 +15,12 @@ export function descriptionToParticle(
 	controller?: Controller,
 	options: {
 		clone?: boolean
-		startOrder?: number
+		isFirst?: boolean
 	} = {
 		clone: true
 	}
 ) {
-	const { clone, startOrder } = options
+	const { clone, isFirst } = options
 	const cloneDescription = (clone ? cloneDeep(description) : description) as PartialParticleItem | PartialParticleItem[]
 	const formatDescription = Array.isArray(cloneDescription) ? cloneDescription : [cloneDescription]
 	/** 打平树数据 */
@@ -29,10 +29,10 @@ export function descriptionToParticle(
 	const flatParticleArr: FlatParticleTreeArr = []
 	const queue = formatDescription.slice(0)
 	/** 遍历次数 */
-	let traverseCount = startOrder || 0
+	let isInit = isFirst !== undefined ? isFirst : true
 	while (queue.length) {
 		/** 如果为第一层 */
-		if (traverseCount === 0) {
+		if (isInit) {
 			flatParticleMap[PARTICLE_TOP] = {
 				key: PARTICLE_TOP,
 				children: formatDescription as ParticleItem[],
@@ -45,15 +45,13 @@ export function descriptionToParticle(
 					layer: '0'
 				}
 			})
+			isInit = false
 		}
 		/** 取出元素 */
 		const currentDesc = queue.shift()!
 		/** __particle会提前遍历父级并置入数据中 */
 		const { __particle } = currentDesc
-		__particle.order = traverseCount
 		const { layer: particleLayer } = __particle
-		/** 遍历次数累计 */
-		traverseCount += 1
 		/** 保存数据到打平数据中 */
 		flatParticleMap[currentDesc.key] = currentDesc as ParticleItem
 		/** 按遍历顺序将数据保存到数组中 */

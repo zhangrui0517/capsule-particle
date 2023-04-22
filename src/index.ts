@@ -146,18 +146,15 @@ class Particle {
 				const allChildren = this.getAllChildren(keyItem)!
 				allChildren.push(deleteItem)
 				forEach(allChildren, (particle) => {
-					const { key, __particle } = particle
-					const { order } = __particle
+					const { key } = particle
+					const index = this.#flatParticleArr.indexOf(particle)
 					delete this.#flatParticleMap[key]
-					this.#flatParticleArr[order] = null
+					this.#flatParticleArr[index] = null
 				})
 			}
 		})
 		if (hasChange) {
 			this.#flatParticleArr = this.#flatParticleArr.filter((item) => item)
-			forEach(this.#flatParticleArr, (item, index) => {
-				item!.__particle.order = index
-			})
 		}
 	}
 	/**
@@ -176,10 +173,7 @@ class Particle {
 		const cloneData = cloneDeep(data)
 		const parentParticle = this.getItem(key)
 		if (parentParticle) {
-			const {
-				key,
-				__particle: { order: parentOrder }
-			} = parentParticle
+			const { key } = parentParticle
 			const oldParentParticleChildren = this.getAllChildren(key)!
 			const children = parentParticle.children!
 			parentParticle.children = parentParticle.children || []
@@ -197,17 +191,15 @@ class Particle {
 				controller || this.#controller,
 				{
 					clone: false,
-					startOrder: parentOrder
+					isFirst: false
 				}
 			)
 			Object.assign(this.#flatParticleMap, flatParticleMap)
+			const partentIndex = this.#flatParticleArr.indexOf(parentParticle)
 			this.#flatParticleArr = this.#flatParticleArr
-				.slice(0, parentOrder)
+				.slice(0, partentIndex)
 				.concat(flatParticleArr)
 				.concat(this.#flatParticleArr.slice(oldParentParticleChildren.length + 2))
-			forEach(this.#flatParticleArr, (item, index) => {
-				item!.__particle.order = index
-			})
 			return true
 		}
 		console.error('The specified particle does not exist, key is ', key)
@@ -232,26 +224,21 @@ class Particle {
 				__particle: { parent: replaceItemParent, index: replaceIndex }
 			} = replaceParticleItem
 			const parentParticle = this.getItem(replaceItemParent)!
-			const {
-				__particle: { order: parentOrder }
-			} = parentParticle
 			parentParticle.children![replaceIndex] = data as ParticleItem
 			const { flatParticleArr, flatParticleMap } = descriptionToParticle(
 				parentParticle,
 				controller || this.#controller,
 				{
 					clone: false,
-					startOrder: parentOrder
+					isFirst: false
 				}
 			)
 			Object.assign(this.#flatParticleMap, flatParticleMap)
+			const parentIndex = this.#flatParticleArr.indexOf(parentParticle)
 			this.#flatParticleArr = this.#flatParticleArr
-				.slice(0, parentOrder)
+				.slice(0, parentIndex)
 				.concat(flatParticleArr)
-				.concat(this.#flatParticleArr.slice(parentOrder + 1))
-			forEach(this.#flatParticleArr, (item, index) => {
-				item!.__particle.order = index
-			})
+				.concat(this.#flatParticleArr.slice(parentIndex + 1))
 			return true
 		} else {
 			console.error('The specified particle does not exist, key is ', key)
