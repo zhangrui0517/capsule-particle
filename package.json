@@ -1,6 +1,6 @@
 {
   "name": "capsule-particle",
-  "description": "$description$",
+  "description": "Maintain tree structure data, provide add, delete, modify, query, replace, and flatten data structures. Callback functions can be called during tree construction to modify nodes",
   "version": "1.0.33",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -18,7 +18,7 @@
       "npm run lint:script"
     ]
   },
-  "keywords": [],
+  "keywords": ["tree","object","flat","maintain tree","curd"],
   "author": "zhangrui0517",
   "license": "MIT",
   "devDependencies": {
