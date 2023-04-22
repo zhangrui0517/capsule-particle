@@ -12,8 +12,9 @@ yarn.lock
 .editorconfig
 .eslintrc.json
 .eslintignore
-webpack.custom.js
 vite.test.ts
 vite.config.ts
 .commitlintrc.json
+pnpm-lock.yaml
 typings
+.npmrc
