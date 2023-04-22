@@ -12,10 +12,10 @@ export function cloneDeep(data: object) {
 	Function.prototype.toJSON = function () {
 		return `$function$/${this.toString()}`
 	}
-	const result = JSON.parse(JSON.stringify(data), (key, value) => {
+	const result = JSON.parse(JSON.stringify(data), (_key, value) => {
 		if (typeof value === 'string' && value.charAt(0) === '$') {
 			let matchType: CloneMatchType = undefined
-			const newValue = value.replace(/\$(\d|\w)+\$\//, (match) => {
+			const newValue: string = value.replace(/\$(\d|\w)+\$\//, (match) => {
 				matchType = match as CloneMatchType
 				return ''
 			})

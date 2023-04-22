@@ -45,3 +45,59 @@ export type ParticleTree = ParticleItem
 export type FlatParticleTreeMap = Record<string, ParticleItem>
 
 export type FlatParticleTreeArr = Array<ParticleItem | null>
+
+declare class Particle {
+	#private
+	constructor(description: Description | Description[], controller?: Controller)
+	getParticle(options?: { clone?: boolean }): any
+	getItem(
+		keys?: string[],
+		options?: {
+			clone?: boolean
+		}
+	): FlatParticleTreeMap | null
+	getItem(
+		keys?: string,
+		options?: {
+			clone?: boolean
+		}
+	): ParticleItem | null
+	setItem(
+		setData:
+			| {
+					key: string
+					data: Record<string, any>
+			  }
+			| Array<{
+					key: string
+					data: Record<string, any>
+			  }>,
+		options?: {
+			merge?: boolean
+		}
+	): void
+	getAllChildren(
+		key: string,
+		options?: {
+			clone?: boolean
+		}
+	): ParticleItem[] | null
+	remove(key: string | string[]): void
+	append(
+		key: string,
+		data: Description,
+		options?: {
+			order?: number
+			controller?: Controller
+		}
+	): true | null
+	replace(
+		key: string,
+		data: Description,
+		options?: {
+			controller?: Controller
+		}
+	): true | null
+}
+
+export default Particle
