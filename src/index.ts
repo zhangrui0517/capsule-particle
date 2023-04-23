@@ -181,6 +181,7 @@ class Particle {
 			/** 清除无效的数据 */
 			this.#flatParticleArr = this.#flatParticleArr.filter((item) => item)
 		}
+		return true
 	}
 	/**
 	 * 添加元素到指定位置
@@ -281,9 +282,7 @@ class Particle {
 		console.error('The specified particle does not exist, key is ', key)
 		return null
 	}
-	/**
-	 * 替换元素
-	 */
+	/** 替换元素 */
 	replace(
 		key: string,
 		data: Description,
@@ -291,10 +290,6 @@ class Particle {
 			controller?: Controller
 		}
 	) {
-		if (key === PARTICLE_TOP) {
-			console.error('Replacing __particleTop__ nodes is not allowed')
-			return null
-		}
 		const replaceParticleItem = this.getItem(key)
 		if (replaceParticleItem) {
 			const cloneData = cloneDeep(data)
@@ -311,47 +306,24 @@ class Particle {
 					return result
 				})
 			if (isRepeat) {
-				console.error(`Replace element that overlaps with existing element, key is "${repeatKey}"`)
+				console.error(`Replace element that repeat with existing element, key is "${repeatKey}"`)
 				return null
 			}
-			/** 删除要替换的节点 */
-			this.remove(key)
-			const { controller } = options || {}
-			const {
-				__particle: { parent: replaceItemParentKey, index: replaceIndex }
-			} = replaceParticleItem
-			const parentParticle = this.getItem(replaceItemParentKey)!
-			/** 父级为顶层元素处理 */
-			if (replaceItemParentKey === PARTICLE_TOP) {
-				const { flatParticleArr, flatParticleMap } = descriptionToParticle(cloneData, controller || this.#controller, {
-					clone: false
+			const replaceOrder = this.#flatParticleArr.indexOf(replaceParticleItem)
+			const removeResult = this.remove(key)
+			if (removeResult) {
+				const { controller } = options || {}
+				const {
+					__particle: { parent }
+				} = replaceParticleItem
+				this.append(parent, cloneData, {
+					order: replaceOrder,
+					controller: controller || this.#controller
 				})
-				parentParticle.children!.splice(replaceIndex, 0, cloneData)
-				/** 去除顶层信息后，合并到当前打平信息中 */
-				delete flatParticleMap[PARTICLE_TOP]
-				this.#flatParticleArr.splice(replaceIndex, 0, ...flatParticleArr)
-			} else {
-				/** 将替换元素置入对应位置 */
-				parentParticle.children!.splice(replaceIndex, 0, cloneData)
-				/** 将新增节点置入当前树中一起格式化 */
-				const { flatParticleArr, flatParticleMap } = descriptionToParticle(
-					parentParticle,
-					controller || this.#controller,
-					{
-						clone: false,
-						isFirst: false
-					}
-				)
-				Object.assign(this.#flatParticleMap, flatParticleMap)
-				/** 将新增节点按顺序添加到flatParticleArr中 */
-				const parentIndex = this.#flatParticleArr.indexOf(parentParticle)
-				this.#flatParticleArr.splice(parentIndex, 1, ...flatParticleArr)
+				return true
 			}
-			return true
-		} else {
-			console.error('The specified particle does not exist, key is ', key)
-			return null
 		}
+		return null
 	}
 }
 
