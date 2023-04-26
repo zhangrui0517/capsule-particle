@@ -49,6 +49,21 @@ export function descriptionToParticle(
 		}
 		/** 取出元素 */
 		const currentDesc = queue.shift()!
+		/** 检查是否有重复的元素 */
+		if (flatParticleMap[currentDesc.key]) {
+			try {
+				console.error(
+					'An element with the same key already exists, please change it. The current configuration has been skipped. The repeat element is ',
+					JSON.stringify(currentDesc)
+				)
+			} catch (err) {
+				console.error(
+					'An element with the same key already exists, please change it. The current configuration has been skipped. The repeat element is ',
+					currentDesc.key
+				)
+			}
+			continue
+		}
 		/** __particle会提前遍历父级并置入数据中 */
 		const { __particle } = currentDesc
 		const { layer: particleLayer } = __particle
