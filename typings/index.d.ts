@@ -1,3 +1,5 @@
+import { PARTICLE_FLAG, PARTICLE_TOP } from '../src/utils'
+
 declare global {
 	interface Function {
 		toJSON?: () => any
@@ -99,5 +101,7 @@ declare class Particle {
 		}
 	): true | null
 }
+
+export { PARTICLE_FLAG, PARTICLE_TOP }
 
 export default Particle
