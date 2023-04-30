@@ -327,5 +327,5 @@ class Particle {
 	}
 }
 
-export { Controller, Description }
+export { Controller, Description, PARTICLE_FLAG, PARTICLE_TOP }
 export default Particle
