@@ -1,5 +1,3 @@
-import { PARTICLE_FLAG, PARTICLE_TOP } from '../src/utils'
-
 declare global {
 	interface Function {
 		toJSON?: () => any
@@ -53,17 +51,11 @@ declare class Particle {
 	constructor(description: Description | Description[], controller?: Controller)
 	getParticle(options?: { clone?: boolean }): any
 	getItem(
-		keys?: string[],
+		keys?: string | string[],
 		options?: {
 			clone?: boolean
 		}
-	): FlatParticleTreeMap | null
-	getItem(
-		keys?: string,
-		options?: {
-			clone?: boolean
-		}
-	): ParticleItem | null
+	): FlatParticleTreeMap | ParticleItem | null
 	setItem(
 		setData:
 			| {
@@ -76,15 +68,26 @@ declare class Particle {
 			  }>,
 		options?: {
 			merge?: boolean
+			excludeKeys?: string[]
 		}
-	): void
+	): string[]
 	getAllChildren(
 		key: string,
 		options?: {
 			clone?: boolean
 		}
 	): ParticleItem[] | null
-	remove(key: string | string[]): void
+	remove(
+		key: string | string[],
+		callback: (
+			removeInfo: Array<{
+				key: string
+				parent: string
+				children: string[]
+				index: number
+			}>
+		) => void
+	): void
 	append(
 		key: string,
 		data: Description,
@@ -102,6 +105,12 @@ declare class Particle {
 	): true | null
 }
 
-export { PARTICLE_FLAG, PARTICLE_TOP }
+declare
+const PARTICLE_TOP = '__particleTop__'
+
+declare
+const PARTICLE_TOP = '__particle'
+
+export { PARTICLE_TOP, PARTICLE_TOP }
 
 export default Particle
