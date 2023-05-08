@@ -1,6 +1,6 @@
 import type { Controller, Description, ParticleItem, FlatParticleTreeMap, FlatParticleTreeArr } from '../typings'
 import { descriptionToParticle, cloneDeep, PARTICLE_FLAG, getAllChildren, PARTICLE_TOP } from './utils'
-import { forEach, merge } from 'lodash-es'
+import { forEach, merge, intersection } from 'lodash-es'
 
 class Particle {
 	#particle: ParticleItem[]
@@ -29,8 +29,6 @@ class Particle {
 		return clone ? cloneDeep(this.#particle) : this.#particle
 	}
 	/** 单个/多个查询或获取全部 */
-	getItem(keys?: string[], options?: { clone?: boolean }): FlatParticleTreeMap | null
-	getItem(keys?: string, options?: { clone?: boolean }): ParticleItem | null
 	getItem(
 		keys?: string | string[],
 		options: {
@@ -38,14 +36,14 @@ class Particle {
 		} = {
 			clone: false
 		}
-	) {
+	): FlatParticleTreeMap | ParticleItem | null {
 		const { clone } = options
 		const flatParticle = this.#flatParticleMap
 		if (!keys) {
 			return clone ? cloneDeep(flatParticle) : flatParticle
 		}
 		if (Array.isArray(keys)) {
-			const result: Record<string, ParticleItem> = {}
+			const result: FlatParticleTreeMap = {}
 			let hasChange = false
 			forEach(keys, (item) => {
 				const currentParticle = flatParticle[item]
@@ -79,13 +77,16 @@ class Particle {
 			  }>,
 		options: {
 			merge?: boolean
+			excludeKeys?: string[]
 		} = {
 			merge: false
 		}
 	) {
-		const { merge: optionMerge } = options
+		const { merge: optionMerge, excludeKeys } = options
 		const flatParticle = this.#flatParticleMap
 		const setDatas = Array.isArray(setData) ? setData : [setData]
+		/** 设置完成的key集合 */
+		const setKeys: string[] = []
 		forEach(setDatas, (item) => {
 			const { key, data } = item
 			const currentParticle = flatParticle[key]
@@ -100,9 +101,19 @@ class Particle {
 					console.error('Not allowed to modify key！')
 					return
 				}
+				if (excludeKeys?.length) {
+					const dataKeys = Object.keys(data)
+					const xorKeys = intersection(dataKeys, excludeKeys)
+					if (xorKeys.length) {
+						console.error('Not allowed to modify key！Key is ', xorKeys.join(','))
+						return
+					}
+				}
+				setKeys.push(key)
 				optionMerge ? merge(flatParticle[key]!, data) : Object.assign(flatParticle[key]!, data)
 			}
 		})
+		return setKeys
 	}
 	/** 获取指定元素的所有children */
 	getAllChildren(
@@ -122,7 +133,16 @@ class Particle {
 		}
 	}
 	/** 删除元素 */
-	remove(key: string | string[]) {
+	remove(
+		key: string | string[],
+		callback?: (
+			removeInfo: Array<{
+				key: string
+				parent: string
+				children: string[]
+			}>
+		) => void
+	) {
 		const keys = Array.isArray(key) ? key : [key]
 		if (keys.indexOf(PARTICLE_TOP) > -1) {
 			console.error('Deleting "__particleTop__" node is not allowed')
@@ -132,33 +152,65 @@ class Particle {
 		let hasChange = false
 		/** 待清除无效数据的children数据 */
 		const toBeFilterChildren: ParticleItem[][] = []
+		/** 收集删除的相关信息，作为回调函数的参数 */
+		const removeInfos: Array<{
+			key: string
+			index: number
+			parent: string
+			children: string[]
+		}> = []
 		forEach(keys, (keyItem) => {
-			const deleteItem = this.getItem(keyItem)
+			const deleteItem = this.getItem(keyItem) as ParticleItem
 			if (deleteItem) {
 				hasChange = true
 				const { __particle } = deleteItem || {}
 				const { parent, index } = __particle
 				/** 获取父级 */
-				const currentParentItem = this.getItem(parent)!
+				const currentParentItem = this.getItem(parent) as ParticleItem
 				const { children, __particle: __parentPaticle } = currentParentItem
 				/** 从父级的children中删除，先置为null，可能同时删除的元素在同一个父级中 */
 				children![index] = null as unknown as ParticleItem
 				toBeFilterChildren.push(children!)
-				/** 顶层的children都是树的起点，无需重置index、layer */
+				/** 顶层的children都是树的起点，无需重置layer */
 				if (parent !== PARTICLE_TOP) {
 					const { layer } = __parentPaticle
-					forEach(currentParentItem.children, (item, index) => {
-						/** 待删除的元素会被置为null */
-						if (item) {
-							Object.assign(item.__particle, {
-								index,
-								layer: `${layer}-${index}`
-							})
+					forEach(
+						currentParentItem.children!.filter((item) => item),
+						(item, index) => {
+							/** 待删除的元素会被置为null */
+							if (item) {
+								Object.assign(item.__particle, {
+									index,
+									layer: `${layer}-${index}`
+								})
+							}
 						}
-					})
+					)
+				} else {
+					/** 顶层元素需要重置index信息 */
+					forEach(
+						currentParentItem.children!.filter((item) => item),
+						(item, index) => {
+							/** 待删除的元素会被置为null */
+							if (item) {
+								Object.assign(item.__particle, {
+									index
+								})
+							}
+						}
+					)
 				}
 				/** 删除指定元素的所有子级 */
 				const allChildren = this.getAllChildren(keyItem)!
+				/** 存在callback才收集删除信息 */
+				if (callback) {
+					removeInfos.push({
+						key: keyItem,
+						index,
+						parent,
+						children: allChildren.map((item) => item.key)
+					})
+				}
 				allChildren.push(deleteItem)
 				forEach(allChildren, (particle) => {
 					const { key } = particle
@@ -180,6 +232,7 @@ class Particle {
 		if (hasChange) {
 			/** 清除无效的数据 */
 			this.#flatParticleArr = this.#flatParticleArr.filter((item) => item)
+			callback && callback(removeInfos)
 		}
 		return true
 	}
@@ -207,7 +260,7 @@ class Particle {
 		}
 		const { order, controller } = options || {}
 		const cloneData = cloneDeep(data)
-		const parentParticle = this.getItem(key)
+		const parentParticle = this.getItem(key) as ParticleItem
 		if (parentParticle) {
 			/** 新增到顶层节点中 */
 			if (key === PARTICLE_TOP) {
@@ -290,7 +343,7 @@ class Particle {
 			controller?: Controller
 		}
 	) {
-		const replaceParticleItem = this.getItem(key)
+		const replaceParticleItem = this.getItem(key) as ParticleItem
 		if (replaceParticleItem) {
 			const cloneData = cloneDeep(data)
 			/** 检查替换的元素中，是否存在与已有元素重复 */
