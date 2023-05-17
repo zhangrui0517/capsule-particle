@@ -12,7 +12,7 @@ import { forEach } from 'lodash-es'
 
 export function descriptionToParticle(
 	description: Description | Description[],
-	controller?: Controller,
+	controller?: Controller | null,
 	options: {
 		clone?: boolean
 		isFirst?: boolean

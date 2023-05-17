@@ -281,9 +281,11 @@ class Particle {
 				} else {
 					children.push(cloneData)
 				}
-				const { flatParticleArr, flatParticleMap } = descriptionToParticle(cloneData, controller || this.#controller, {
+				const { flatParticleArr, flatParticleMap } = descriptionToParticle(cloneData, null, {
 					clone: false
 				})
+				/** 将新增元素传递给回调函数处理 */
+				controller ? controller(flatParticleMap[appendKey]!) : this.#controller!(flatParticleMap[appendKey]!)
 				/** 去除顶层信息后，合并到当前打平信息中 */
 				delete flatParticleMap[PARTICLE_TOP]
 				Object.assign(this.#flatParticleMap, flatParticleMap)
@@ -317,14 +319,11 @@ class Particle {
 					children.push(cloneData)
 				}
 				/** 将指定的子树重新格式化 */
-				const { flatParticleArr, flatParticleMap } = descriptionToParticle(
-					parentParticle,
-					controller || this.#controller,
-					{
-						clone: false,
-						isFirst: false
-					}
-				)
+				const { flatParticleArr, flatParticleMap } = descriptionToParticle(parentParticle, null, {
+					clone: false,
+					isFirst: false
+				})
+				controller ? controller(flatParticleMap[appendKey]!) : this.#controller!(flatParticleMap[appendKey]!)
 				Object.assign(this.#flatParticleMap, flatParticleMap)
 				const partentIndex = this.#flatParticleArr.indexOf(parentParticle)
 				/** 将新增的数据添加到flatParticleArr中 */
