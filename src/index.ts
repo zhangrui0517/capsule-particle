@@ -1,4 +1,12 @@
-import type { Controller, Description, ParticleItem, FlatParticleTreeMap, FlatParticleTreeArr } from '../typings'
+import type {
+	Controller,
+	Description,
+	ParticleItem,
+	FlatParticleTreeMap,
+	FlatParticleTreeArr,
+	removeCallback,
+	removeCallbackParams
+} from '../typings'
 import { descriptionToParticle, cloneDeep, PARTICLE_FLAG, getAllChildren, PARTICLE_TOP } from './utils'
 import { forEach, merge, intersection } from 'lodash-es'
 
@@ -133,16 +141,7 @@ class Particle {
 		}
 	}
 	/** 删除元素 */
-	remove(
-		key: string | string[],
-		callback?: (
-			removeInfo: Array<{
-				key: string
-				parent: string
-				children: string[]
-			}>
-		) => void
-	) {
+	remove(key: string | string[], callback?: removeCallback) {
 		const keys = Array.isArray(key) ? key : [key]
 		if (keys.indexOf(PARTICLE_TOP) > -1) {
 			console.error('Deleting "__particleTop__" node is not allowed')
@@ -153,12 +152,7 @@ class Particle {
 		/** 待清除无效数据的children数据 */
 		const toBeFilterChildren: ParticleItem[][] = []
 		/** 收集删除的相关信息，作为回调函数的参数 */
-		const removeInfos: Array<{
-			key: string
-			index: number
-			parent: string
-			children: string[]
-		}> = []
+		const removeInfos: removeCallbackParams = []
 		forEach(keys, (keyItem) => {
 			const deleteItem = this.getItem(keyItem) as ParticleItem
 			if (deleteItem) {
@@ -202,15 +196,15 @@ class Particle {
 				}
 				/** 删除指定元素的所有子级 */
 				const allChildren = this.getAllChildren(keyItem)!
+				const allChildrenKeys = allChildren.map((item) => item.key)
 				/** 存在callback才收集删除信息 */
-				if (callback) {
-					removeInfos.push({
-						key: keyItem,
-						index,
-						parent,
-						children: allChildren.map((item) => item.key)
-					})
-				}
+				removeInfos.push({
+					key: keyItem,
+					index,
+					parent,
+					children: allChildrenKeys,
+					removeKeys: [keyItem].concat(allChildrenKeys)
+				})
 				allChildren.push(deleteItem)
 				forEach(allChildren, (particle) => {
 					const { key } = particle
@@ -234,7 +228,7 @@ class Particle {
 			this.#flatParticleArr = this.#flatParticleArr.filter((item) => item)
 			callback && callback(removeInfos)
 		}
-		return true
+		return removeInfos
 	}
 	/**
 	 * 添加元素到指定位置
@@ -244,7 +238,7 @@ class Particle {
 		data: Description,
 		options?: {
 			order?: number
-			controller?: Controller
+			controller?: Controller | null
 		}
 	) {
 		const appendKey = data.key
@@ -284,26 +278,31 @@ class Particle {
 				const { flatParticleArr, flatParticleMap } = descriptionToParticle(cloneData, null, {
 					clone: false
 				})
-				/** 将新增元素传递给回调函数处理 */
-				controller ? controller(flatParticleMap[appendKey]!) : this.#controller!(flatParticleMap[appendKey]!)
 				/** 去除顶层信息后，合并到当前打平信息中 */
 				delete flatParticleMap[PARTICLE_TOP]
 				Object.assign(this.#flatParticleMap, flatParticleMap)
 				/** 将新增到数据，按顺序增加到flatParticleArr */
-				if (order === 0) {
-					/** 如果在顶层元素的首位，则直接插入到头部即可 */
-					this.#flatParticleArr.splice(0, 0, ...flatParticleArr)
-					return true
+				switch (order) {
+					case 0: {
+						/** 如果在顶层元素的首位，则直接插入到头部即可 */
+						this.#flatParticleArr.splice(0, 0, ...flatParticleArr)
+						break
+					}
+					case undefined: {
+						/** 如果在顶层元素的末位，则直接插入到尾部即可 */
+						this.#flatParticleArr.push(...flatParticleArr)
+						break
+					}
+					default: {
+						const prevParticle = children[order - 1]!
+						const prevParticleChildren = this.getAllChildren(prevParticle.key)!
+						this.#flatParticleArr.splice(prevParticleChildren.length + 1, 0, ...flatParticleArr)
+					}
 				}
-				if (order === undefined) {
-					/** 如果在顶层元素的末位，则直接插入到尾部即可 */
-					this.#flatParticleArr.push(...flatParticleArr)
-					return true
-				}
-				const prevParticle = children[order - 1]!
-				const prevParticleChildren = this.getAllChildren(prevParticle.key)!
-				this.#flatParticleArr.splice(prevParticleChildren.length + 1, 0, ...flatParticleArr)
-				return true
+				const appendItem = flatParticleMap[appendKey]!
+				/** 将新增元素传递给回调函数处理 */
+				controller ? controller(appendItem) : controller !== null && this.#controller!(appendItem)
+				return appendItem
 			} else {
 				/** 新增到非顶层节点 */
 				const oldParentParticleChildren = this.getAllChildren(key)!
@@ -323,12 +322,13 @@ class Particle {
 					clone: false,
 					isFirst: false
 				})
-				controller ? controller(flatParticleMap[appendKey]!) : this.#controller!(flatParticleMap[appendKey]!)
+				const appendItem = flatParticleMap[appendKey]!
 				Object.assign(this.#flatParticleMap, flatParticleMap)
 				const partentIndex = this.#flatParticleArr.indexOf(parentParticle)
 				/** 将新增的数据添加到flatParticleArr中 */
 				this.#flatParticleArr.splice(partentIndex, oldParentParticleChildren.length + 1, ...flatParticleArr)
-				return true
+				controller ? controller(appendItem) : controller !== null && this.#controller!(flatParticleMap[appendKey]!)
+				return appendItem
 			}
 		}
 		console.error('The specified particle does not exist, key is ', key)
@@ -340,14 +340,16 @@ class Particle {
 		data: Description,
 		options?: {
 			controller?: Controller
+			removeCallback?: removeCallback
 		}
 	) {
 		const replaceParticleItem = this.getItem(key) as ParticleItem
 		if (replaceParticleItem) {
 			const cloneData = cloneDeep(data)
-			/** 检查替换的元素中，是否存在与已有元素重复 */
+			/** 待删除的元素 */
 			const deleteKeys = getAllChildren(replaceParticleItem).map((item) => item.key)
 			let repeatKey = ''
+			/** 检查要替换的数据是否存在与现有字段重复 */
 			const isRepeat = getAllChildren(data, { includeRoot: true })
 				.map((item) => item.key)
 				.some((key) => {
@@ -362,17 +364,20 @@ class Particle {
 				return null
 			}
 			const replaceOrder = this.#flatParticleArr.indexOf(replaceParticleItem)
-			const removeResult = this.remove(key)
-			if (removeResult) {
-				const { controller } = options || {}
+			const { removeCallback, controller } = options || {}
+			const removeInfos = this.remove(key, removeCallback)
+			if (removeInfos) {
 				const {
 					__particle: { parent }
 				} = replaceParticleItem
-				this.append(parent, cloneData, {
+				const appendInfos = this.append(parent, cloneData, {
 					order: replaceOrder,
 					controller: controller || this.#controller
 				})
-				return true
+				return {
+					removeInfos,
+					appendInfos
+				}
 			}
 		}
 		return null

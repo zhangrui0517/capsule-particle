@@ -46,16 +46,30 @@ export type FlatParticleTreeMap = Record<string, ParticleItem>
 
 export type FlatParticleTreeArr = Array<ParticleItem | null>
 
+/** 实例方法-删除 */
+export type removeCallbackParams = Array<{
+	key: string
+	parent: string
+	children: string[]
+	index: number
+	removeKeys: string[]
+}>
+
+export type removeCallback = (removeInfo: removeCallbackParams) => void
+
 declare class Particle {
 	#private
 	constructor(description: Description | Description[], controller?: Controller)
-	getParticle(options?: { clone?: boolean }): any
+	/** 获取完整的对象 */
+	getParticle(options?: { clone?: boolean }): ParticleItem
+	/** 获取指定的数据或打平的全部数据 */
 	getItem(
 		keys?: string | string[],
 		options?: {
 			clone?: boolean
 		}
 	): FlatParticleTreeMap | ParticleItem | null
+	/** 设置指定的数据项 */
 	setItem(
 		setData:
 			| {
@@ -71,23 +85,16 @@ declare class Particle {
 			excludeKeys?: string[]
 		}
 	): string[]
+	/** 获取指定元素的所有子级节点 */
 	getAllChildren(
 		key: string,
 		options?: {
 			clone?: boolean
 		}
 	): ParticleItem[] | null
-	remove(
-		key: string | string[],
-		callback: (
-			removeInfo: Array<{
-				key: string
-				parent: string
-				children: string[]
-				index: number
-			}>
-		) => void
-	): void
+	/** 移除指定的元素和它的全部子元素 */
+	remove(key: string | string[], callback: removeCallback): removeCallbackParams | undefined
+	/** 添加元素到指定的元素中 */
 	append(
 		key: string,
 		data: Description,
@@ -95,22 +102,22 @@ declare class Particle {
 			order?: number
 			controller?: Controller
 		}
-	): true | null
+	): ParticleItem | null
+	/** 替换指定的元素 */
 	replace(
 		key: string,
 		data: Description,
 		options?: {
 			controller?: Controller
 		}
-	): true | null
+	): {
+		removeInfos: removeCallbackParams
+		appendInfos: ParticleItem
+	} | null
 }
 
-declare
-const PARTICLE_TOP = '__particleTop__'
+export const PARTICLE_TOP: '__particleTop__'
 
-declare
-const PARTICLE_TOP = '__particle'
-
-export { PARTICLE_TOP, PARTICLE_TOP }
+export const PARTICLE_FLAG: '__particle'
 
 export default Particle
