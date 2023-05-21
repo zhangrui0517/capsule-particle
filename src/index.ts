@@ -1,25 +1,25 @@
 import type {
 	Controller,
-	Description,
 	ParticleItem,
+	ParticleItemPlus,
 	FlatParticleTreeMap,
 	FlatParticleTreeArr,
 	removeCallback,
 	removeCallbackParams
 } from '../typings'
-import { descriptionToParticle, cloneDeep, PARTICLE_FLAG, getAllChildren, PARTICLE_TOP } from './utils'
+import { normalizeParticle, cloneDeep, PARTICLE_FLAG, getAllChildren, PARTICLE_TOP } from './utils'
 import { forEach, merge, intersection } from 'lodash-es'
 
-class Particle {
-	#particle: ParticleItem[]
-	#flatParticleMap: FlatParticleTreeMap
-	#flatParticleArr: FlatParticleTreeArr
-	#controller?: Controller
-	constructor(description: Description | Description[], controller?: Controller) {
-		if (!description) {
-			throw new Error(`Invaild description field, description is ${description}`)
+class Particle<T extends object> {
+	#particle: ParticleItem<T>[]
+	#flatParticleMap: FlatParticleTreeMap<T>
+	#flatParticleArr: FlatParticleTreeArr<T>
+	#controller?: Controller<T>
+	constructor(particleItem: ParticleItem<T> | ParticleItem<T>[], controller?: Controller<T>) {
+		if (!particleItem) {
+			throw new Error(`Invaild particleItem field, particleItem is ${particleItem}`)
 		}
-		const { particleTree, flatParticleArr, flatParticleMap } = descriptionToParticle(description, controller)
+		const { particleTree, flatParticleArr, flatParticleMap } = normalizeParticle<T>(particleItem, controller)
 		this.#particle = particleTree
 		this.#flatParticleMap = flatParticleMap
 		this.#flatParticleArr = flatParticleArr
@@ -44,14 +44,14 @@ class Particle {
 		} = {
 			clone: false
 		}
-	): FlatParticleTreeMap | ParticleItem | null {
+	): FlatParticleTreeMap<T> | ParticleItemPlus<T> | null {
 		const { clone } = options
 		const flatParticle = this.#flatParticleMap
 		if (!keys) {
 			return clone ? cloneDeep(flatParticle) : flatParticle
 		}
 		if (Array.isArray(keys)) {
-			const result: FlatParticleTreeMap = {}
+			const result: FlatParticleTreeMap<T> = {}
 			let hasChange = false
 			forEach(keys, (item) => {
 				const currentParticle = flatParticle[item]
@@ -101,7 +101,7 @@ class Particle {
 			if (currentParticle) {
 				if (data[PARTICLE_FLAG] || data['children']) {
 					console.error(
-						'"children" and "__particle" cannot be modified in setItem! If you want to modify "children", please use replace, append, or remove'
+						'"children" and "__particle__" cannot be modified in setItem! If you want to modify "children", please use replace, append, or remove'
 					)
 					return
 				}
@@ -129,7 +129,7 @@ class Particle {
 		options: {
 			clone?: boolean
 		} = {}
-	): ParticleItem[] | null {
+	): ParticleItemPlus<T>[] | null {
 		const { clone } = options
 		const currentParticle = this.#flatParticleMap[key]
 		if (currentParticle) {
@@ -150,20 +150,20 @@ class Particle {
 		/** 修改标记，如果有效果，需要将flatParticleArr中的无效数据剔除 */
 		let hasChange = false
 		/** 待清除无效数据的children数据 */
-		const toBeFilterChildren: ParticleItem[][] = []
+		const toBeFilterChildren: ParticleItemPlus<T>[][] = []
 		/** 收集删除的相关信息，作为回调函数的参数 */
 		const removeInfos: removeCallbackParams = []
 		forEach(keys, (keyItem) => {
-			const deleteItem = this.getItem(keyItem) as ParticleItem
+			const deleteItem = this.getItem(keyItem) as ParticleItemPlus<T>
 			if (deleteItem) {
 				hasChange = true
-				const { __particle } = deleteItem || {}
-				const { parent, index } = __particle
+				const __particle__ = deleteItem[PARTICLE_FLAG]
+				const { parent, index } = __particle__
 				/** 获取父级 */
-				const currentParentItem = this.getItem(parent) as ParticleItem
-				const { children, __particle: __parentPaticle } = currentParentItem
+				const currentParentItem = this.getItem(parent) as ParticleItemPlus<T>
+				const { children, __particle__: __parentPaticle } = currentParentItem
 				/** 从父级的children中删除，先置为null，可能同时删除的元素在同一个父级中 */
-				children![index] = null as unknown as ParticleItem
+				children![index] = null as unknown as ParticleItemPlus<T>
 				toBeFilterChildren.push(children!)
 				/** 顶层的children都是树的起点，无需重置layer */
 				if (parent !== PARTICLE_TOP) {
@@ -173,7 +173,7 @@ class Particle {
 						(item, index) => {
 							/** 待删除的元素会被置为null */
 							if (item) {
-								Object.assign(item.__particle, {
+								Object.assign(item[PARTICLE_FLAG], {
 									index,
 									layer: `${layer}-${index}`
 								})
@@ -187,7 +187,7 @@ class Particle {
 						(item, index) => {
 							/** 待删除的元素会被置为null */
 							if (item) {
-								Object.assign(item.__particle, {
+								Object.assign(item[PARTICLE_FLAG], {
 									index
 								})
 							}
@@ -235,10 +235,10 @@ class Particle {
 	 */
 	append(
 		key: string,
-		data: Description,
+		data: ParticleItem<T>,
 		options?: {
 			order?: number
-			controller?: Controller | null
+			controller?: Controller<T> | null
 		}
 	) {
 		const appendKey = data.key
@@ -253,8 +253,8 @@ class Particle {
 			return null
 		}
 		const { order, controller } = options || {}
-		const cloneData = cloneDeep(data)
-		const parentParticle = this.getItem(key) as ParticleItem
+		const cloneData = cloneDeep(data) as ParticleItemPlus<T>
+		const parentParticle = this.getItem(key) as ParticleItemPlus<T>
 		if (parentParticle) {
 			/** 新增到顶层节点中 */
 			if (key === PARTICLE_TOP) {
@@ -275,7 +275,7 @@ class Particle {
 				} else {
 					children.push(cloneData)
 				}
-				const { flatParticleArr, flatParticleMap } = descriptionToParticle(cloneData, null, {
+				const { flatParticleArr, flatParticleMap } = normalizeParticle<T>(cloneData, null, {
 					clone: false
 				})
 				/** 去除顶层信息后，合并到当前打平信息中 */
@@ -318,7 +318,7 @@ class Particle {
 					children.push(cloneData)
 				}
 				/** 将指定的子树重新格式化 */
-				const { flatParticleArr, flatParticleMap } = descriptionToParticle(parentParticle, null, {
+				const { flatParticleArr, flatParticleMap } = normalizeParticle<T>(parentParticle, null, {
 					clone: false,
 					isFirst: false
 				})
@@ -337,17 +337,17 @@ class Particle {
 	/** 替换元素 */
 	replace(
 		key: string,
-		data: Description,
+		data: ParticleItem<T>,
 		options?: {
-			controller?: Controller
+			controller?: Controller<T>
 			removeCallback?: removeCallback
 		}
 	) {
-		const replaceParticleItem = this.getItem(key) as ParticleItem
+		const replaceParticleItem = this.getItem(key) as ParticleItemPlus<T>
 		if (replaceParticleItem) {
 			const cloneData = cloneDeep(data)
 			/** 待删除的元素 */
-			const deleteKeys = getAllChildren(replaceParticleItem).map((item) => item.key)
+			const deleteKeys = getAllChildren(replaceParticleItem).map((item: ParticleItemPlus<T>) => item.key as string)
 			let repeatKey = ''
 			/** 检查要替换的数据是否存在与现有字段重复 */
 			const isRepeat = getAllChildren(data, { includeRoot: true })
@@ -368,7 +368,7 @@ class Particle {
 			const removeInfos = this.remove(key, removeCallback)
 			if (removeInfos) {
 				const {
-					__particle: { parent }
+					__particle__: { parent }
 				} = replaceParticleItem
 				const appendInfos = this.append(parent, cloneData, {
 					order: replaceOrder,
@@ -384,5 +384,5 @@ class Particle {
 	}
 }
 
-export { Controller, Description, PARTICLE_FLAG, PARTICLE_TOP }
+export { Controller, PARTICLE_FLAG, PARTICLE_TOP, ParticleItem }
 export default Particle

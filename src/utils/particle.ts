@@ -1,18 +1,11 @@
-import {
-	Description,
-	Controller,
-	PartialParticleItem,
-	ParticleItem,
-	FlatParticleTreeMap,
-	FlatParticleTreeArr
-} from '../../typings'
+import { Controller, ParticleItem, ParticleItemPlus, FlatParticleTreeMap, FlatParticleTreeArr } from '../../typings'
 import { PARTICLE_TOP, PARTICLE_FLAG } from '.'
 import { cloneDeep } from './'
 import { forEach } from 'lodash-es'
 
-export function descriptionToParticle(
-	description: Description | Description[],
-	controller?: Controller | null,
+export function normalizeParticle<T extends object>(
+	particleItem: ParticleItem<T> | ParticleItem<T>[] | ParticleItemPlus<T> | ParticleItemPlus<T>[],
+	controller?: Controller<T> | null,
 	options: {
 		clone?: boolean
 		isFirst?: boolean
@@ -21,13 +14,15 @@ export function descriptionToParticle(
 	}
 ) {
 	const { clone, isFirst } = options
-	const cloneDescription = (clone ? cloneDeep(description) : description) as PartialParticleItem | PartialParticleItem[]
-	const formatDescription = Array.isArray(cloneDescription) ? cloneDescription : [cloneDescription]
+	const cloneParticleItem = clone ? cloneDeep(particleItem) : particleItem
+	const formatParticleItem = Array.isArray(cloneParticleItem) ? cloneParticleItem : [cloneParticleItem]
 	/** 打平树数据 */
-	const flatParticleMap: FlatParticleTreeMap = {}
+	const flatParticleMap: FlatParticleTreeMap<T> = {}
 	/** 按遍历顺序排序的数据数组 */
-	const flatParticleArr: FlatParticleTreeArr = []
-	const queue = formatDescription.slice(0)
+	const flatParticleArr: FlatParticleTreeArr<T> = []
+	const queue: ParticleItem<T>[] | ParticleItemPlus<T>[] = formatParticleItem.slice(0) as
+		| ParticleItem<T>[]
+		| ParticleItemPlus<T>[]
 	/** 遍历次数 */
 	let isInit = isFirst !== undefined ? isFirst : true
 	while (queue.length) {
@@ -35,10 +30,10 @@ export function descriptionToParticle(
 		if (isInit) {
 			flatParticleMap[PARTICLE_TOP] = {
 				key: PARTICLE_TOP,
-				children: formatDescription as ParticleItem[],
+				children: formatParticleItem as ParticleItem<T>[],
 				[PARTICLE_FLAG]: null
-			} as unknown as ParticleItem
-			forEach(formatDescription, (item, index) => {
+			} as unknown as ParticleItemPlus<T>
+			forEach(formatParticleItem, (item, index) => {
 				item[PARTICLE_FLAG] = {
 					parent: PARTICLE_TOP,
 					index,
@@ -48,36 +43,36 @@ export function descriptionToParticle(
 			isInit = false
 		}
 		/** 取出元素 */
-		const currentDesc = queue.shift()!
+		const currentParticle = queue.shift()! as ParticleItemPlus<T>
 		/** 检查是否有重复的元素 */
-		if (flatParticleMap[currentDesc.key]) {
+		if (flatParticleMap[currentParticle.key]) {
 			try {
 				console.error(
 					'An element with the same key already exists, please change it. The current configuration has been skipped. The repeat element is ',
-					JSON.stringify(currentDesc)
+					JSON.stringify(currentParticle)
 				)
 			} catch (err) {
 				console.error(
 					'An element with the same key already exists, please change it. The current configuration has been skipped. The repeat element is ',
-					currentDesc.key
+					currentParticle.key
 				)
 			}
 			continue
 		}
 		/** __particle会提前遍历父级并置入数据中 */
-		const { __particle } = currentDesc
-		const { layer: particleLayer } = __particle
+		const __particle__ = currentParticle[PARTICLE_FLAG]
+		const { layer: particleLayer } = __particle__!
 		/** 保存数据到打平数据中 */
-		flatParticleMap[currentDesc.key] = currentDesc as ParticleItem
+		flatParticleMap[currentParticle.key] = currentParticle
 		/** 按遍历顺序将数据保存到数组中 */
-		flatParticleArr.push(currentDesc as ParticleItem)
+		flatParticleArr.push(currentParticle)
 		/** 交给外部回调处理 */
-		controller && controller(currentDesc as ParticleItem)
+		controller && controller(currentParticle)
 		/** 处理子级 */
-		if (currentDesc.children?.length) {
-			forEach(currentDesc.children, (item, index) => {
-				item.__particle = {
-					parent: currentDesc.key,
+		if (currentParticle.children?.length) {
+			forEach(currentParticle.children, (item, index) => {
+				item[PARTICLE_FLAG] = {
+					parent: currentParticle.key,
 					index,
 					layer: `${particleLayer}-${index}`
 				}
@@ -86,7 +81,7 @@ export function descriptionToParticle(
 		}
 	}
 	return {
-		particleTree: formatDescription as ParticleItem[],
+		particleTree: formatParticleItem as ParticleItem<T>[],
 		flatParticleMap,
 		flatParticleArr
 	}

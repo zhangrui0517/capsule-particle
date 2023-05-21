@@ -1,10 +1,12 @@
+import type { ParticleItemPlus, ParticleItem } from '../../typings'
+
 export function hasOwnProperty(obj: Record<string, any>, key: string) {
 	return Object.prototype.hasOwnProperty.call(obj, key)
 }
 
 export type CloneMatchType = '$date$/' | '$function$/' | undefined
 
-export function cloneDeep(data: object) {
+export function cloneDeep<T>(data: T): T {
 	const saveDateToJSON = Date.prototype.toJSON
 	Date.prototype.toJSON = function () {
 		return `$date$/${this.getTime()}`
@@ -35,12 +37,7 @@ export function cloneDeep(data: object) {
 }
 
 /** 获取树元素的所有子级数据 */
-export function getAllChildren<
-	T extends {
-		key: string
-		children?: T[]
-	}
->(
+export function getAllChildren<T extends { children?: T[] }>(
 	treeElement: T,
 	options?: {
 		includeRoot?: boolean
