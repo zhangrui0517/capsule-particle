@@ -10,13 +10,7 @@ export default defineConfig({
 			fileName: 'index'
 		},
 		rollupOptions: {
-			external: ['lodash-es'],
-			output: {
-				globals: {
-					'lodash-es': '_'
-				},
-				exports: 'named'
-			}
+			external: []
 		}
 	}
 })

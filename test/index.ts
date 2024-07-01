@@ -1,13 +1,7 @@
-import Particle, { Description } from '../src'
-import { description } from './data'
+import { Particle } from '../src/index.ts'
+import { description } from './data.ts'
 
-function controller(descItem: Description) {
-	// console.log('descItem: ', descItem)
-	descItem
-}
-
-console.time('particleObj')
-const particleObj = new Particle(description, controller)
-console.timeEnd('particleObj')
-
-console.log('particleObj', particleObj)
+console.time('particle')
+const particleItem = new Particle(description)
+console.timeEnd('particle')
+console.log('#1 particleItem: ', particleItem)
