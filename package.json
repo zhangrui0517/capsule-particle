@@ -12,7 +12,7 @@
     "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./",
     "build": "vite build && pnpm buildType",
     "dev": "vite -c ./vite.test.ts",
-    "buildType": "tsc ./typings/index.ts --declaration --emitDeclarationOnly --declarationDir ./dist --target ES2015"
+    "buildType": "tsc ./src/types.ts --declaration --emitDeclarationOnly --declarationDir ./dist --target ES2015"
   },
   "lint-staged": {
     "**/*.{js,jsx,tsx,ts}": [
