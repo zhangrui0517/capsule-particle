@@ -3,45 +3,45 @@
  * name 唯一名称
  * children 子级元素
  */
-export type ParamDataItem = {
+export type ParamDataItem<T = Record<string, unknown>> = T & {
 	name: string
-	children?: Array<ParamDataItem>
+	children?: Array<ParamDataItem<T>>
 	[key: string]: unknown
 }
-export type ParamDataType = Array<ParamDataItem> | ParamDataItem
-export type ParamDatas = Array<ParamDataItem>
+export type ParamDataType<T = Record<string, unknown>> = Array<ParamDataItem<T>> | ParamDataItem<T>
+export type ParamDatas<T = Record<string, unknown>> = Array<ParamDataItem<T>>
 /**
  * 经过格式化的数据
  * $$parent 父级节点的name
  * $$hierarchy 当前所在的层级
  */
-export type ParticleDataItem = ParamDataItem & {
+export type ParticleDataItem<T = Record<string, unknown>> = ParamDataItem<T> & {
 	/** 父级name */
 	$$parent?: string
 }
 /**
  * 打平的格式化数据
  */
-export type FlatParticleData = Record<string, ParticleDataItem>
-export type ParticleData = Array<ParticleDataItem>
+export type FlatParticleData<T = Record<string, unknown>> = Record<string, ParticleDataItem<T>>
+export type ParticleData<T = Record<string, unknown>> = Array<ParticleDataItem<T>>
 
 /** 基础类型 */
 export type BaseType = 'map' | 'string' | 'number' | 'array' | 'function' | 'boolean' | 'set' | 'object'
 
 /** 遍历数据回调函数类型 */
-export type ParseDataToParticleCallback = (
-	dataItem: ParticleDataItem,
+export type ParseDataToParticleCallback<T = Record<string, unknown>> = (
+	dataItem: ParticleDataItem<T>,
 	index?: number,
-	arr?: ParamDataItem[]
+	arr?: ParamDataItem<T>[]
 ) => boolean | void
 
 /** 实例方法 */
-export type Particle = {
+export type Particle<T = Record<string, unknown>> = {
 	add(
-		data: ParamDataType,
+		data: ParamDataType<T>,
 		targetKey?: string,
 		options?: {
-			callback?: ParseDataToParticleCallback
+			callback?: ParseDataToParticleCallback<T>
 			order?: number
 		}
 	): void
@@ -50,17 +50,17 @@ export type Particle = {
 		data: Record<
 			string,
 			{
-				children?: ParamDatas
+				children?: ParamDatas<T>
 				[key: string]: unknown
 			}
 		>
 	): void
-	get(name?: string): ParticleDataItem | FlatParticleData | undefined
-	getParticles(): ParticleDataItem[]
+	get(name?: string): ParticleDataItem<T> | FlatParticleData<T> | undefined
+	getParticles(): ParticleDataItem<T>[]
 	getChildren(name: string):
 		| {
 				children: string[]
-				childrenMap: Record<string, ParticleDataItem>
+				childrenMap: Record<string, ParticleDataItem<T>>
 		  }
 		| undefined
 }
