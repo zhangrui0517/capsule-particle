@@ -1,5 +1,5 @@
-import { Particle } from '../src/index.ts'
-import { description } from './data.ts'
+import { Particle } from '../dist'
+import { description } from './data'
 
 console.time('particle')
 const particleItem = new Particle(description)
