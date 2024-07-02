@@ -4,7 +4,7 @@
   "version": "1.0.40",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types.d.ts",
   "repository": "https://github.com/zhangrui0517/capsule-particle.git",
   "scripts": {
     "prepublish": "pnpm build",

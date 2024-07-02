@@ -34,3 +34,33 @@ export type ParseDataToParticleCallback = (
 	index?: number,
 	arr?: ParamDataItem[]
 ) => boolean | void
+
+/** 实例方法 */
+export type Particle = {
+	add(
+		data: ParamDataType,
+		targetKey?: string,
+		options?: {
+			callback?: ParseDataToParticleCallback
+			order?: number
+		}
+	): void
+	remove(name: string | string[]): void
+	update(
+		data: Record<
+			string,
+			{
+				children?: ParamDatas
+				[key: string]: unknown
+			}
+		>
+	): void
+	get(name?: string): ParticleDataItem | FlatParticleData | undefined
+	getParticles(): ParticleDataItem[]
+	getChildren(name: string):
+		| {
+				children: string[]
+				childrenMap: Record<string, ParticleDataItem>
+		  }
+		| undefined
+}
