@@ -12,8 +12,8 @@ class Particle<T extends ParamDataType> {
 	#particleData: Array<ParticleDataItem>
 	/** 打平的数据 */
 	#flatParticleData: FlatParticleData
-	constructor(data: T) {
-		const { particleData, flatParticleData } = parseDataToParticle(data)
+	constructor(data: T, callback?: ParseDataToParticleCallback) {
+		const { particleData, flatParticleData } = parseDataToParticle(data, callback)
 		this.#particleData = particleData
 		this.#flatParticleData = flatParticleData
 	}

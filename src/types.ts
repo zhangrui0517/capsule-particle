@@ -36,7 +36,7 @@ export type ParseDataToParticleCallback<T = Record<string, unknown>> = (
 ) => boolean | void
 
 /** 实例方法 */
-export type Particle<T = Record<string, unknown>> = {
+export type ParticleInterface<T = Record<string, unknown>> = {
 	add(
 		data: ParamDataType<T>,
 		targetKey?: string,
@@ -64,3 +64,36 @@ export type Particle<T = Record<string, unknown>> = {
 		  }
 		| undefined
 }
+
+declare class Particle<T extends ParamDataType> {
+	#private
+	constructor(data: T)
+	add(
+		data: ParamDataType,
+		targetKey?: string,
+		options?: {
+			callback?: ParseDataToParticleCallback
+			order?: number
+		}
+	): void
+	remove(name: string | string[]): void
+	update(
+		data: Record<
+			string,
+			{
+				children?: ParamDatas
+				[key: string]: unknown
+			}
+		>
+	): void
+	get(name?: string): ParticleDataItem<Record<string, unknown>> | FlatParticleData | undefined
+	getParticles(): ParticleDataItem[]
+	getChildren(name: string):
+		| {
+				children: string[]
+				childrenMap: Record<string, ParticleDataItem>
+		  }
+		| undefined
+}
+
+export { Particle }
