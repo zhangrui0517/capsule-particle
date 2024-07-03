@@ -1,7 +1,7 @@
 {
   "name": "capsule-particle",
   "description": "Maintain tree structure data, provide add, delete, modify, query, replace, and flatten data structures. Callback functions can be called during tree construction to modify nodes",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/types.d.ts",
