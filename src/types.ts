@@ -67,7 +67,7 @@ export type ParticleInterface<T = Record<string, unknown>> = {
 
 declare class Particle<T extends ParamDataType> {
 	#private
-	constructor(data: T)
+	constructor(data: T, callback?: ParseDataToParticleCallback)
 	add(
 		data: ParamDataType,
 		targetKey?: string,
