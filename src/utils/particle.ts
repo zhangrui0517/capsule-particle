@@ -1,9 +1,9 @@
-import { ParticleDataItem, ParamDataType, ParamDataItem, ParseDataToParticleCallback, FlatParticleData } from '../types'
+import { ParticleDataItem, ParseDataToParticleCallback, FlatParticleData, ParamDatas } from '../types'
 import { forPro } from './common'
 
 /** 解析数据 */
-export function parseDataToParticle(
-	data: ParamDataType,
+export function parseDataToParticle<T extends ParamDatas = ParamDatas>(
+	data: T,
 	callback?: ParseDataToParticleCallback,
 	options?: {
 		/** 当前的打平数据，仅用于判断是否存在重复元素 */
@@ -11,12 +11,11 @@ export function parseDataToParticle(
 	}
 ) {
 	const { currentFlatParticleData } = options || {}
-	const dataArr = Array.isArray(data) ? data : [data]
 	/** 存储格式化数据 */
 	const particleData: Array<ParticleDataItem> = []
 	/** 存储格式化数据的映射 */
 	const flatParticleData: FlatParticleData = {}
-	traverseData(dataArr, (dataItem, index, arr) => {
+	traverseData(data, (dataItem, index, arr) => {
 		const { name, $$parent } = dataItem
 		if (flatParticleData[name] || currentFlatParticleData?.[name]) {
 			// 不可添加已存在的元素，跳过该元素
@@ -41,9 +40,9 @@ export function parseDataToParticle(
 }
 
 /** 遍历树型数据 */
-export function traverseData(
-	dataArr: ParamDataItem[],
-	callback: ParseDataToParticleCallback,
+export function traverseData<T extends ParamDatas = ParamDatas>(
+	dataArr: T,
+	callback: ParseDataToParticleCallback<T[0]>,
 	params?: {
 		parent: string
 	}
@@ -59,7 +58,7 @@ export function traverseData(
 		}
 		const { children, name } = newDataItem
 		if (children?.length) {
-			traverseData(children, callback, {
+			traverseData(children as T, callback, {
 				parent: name
 			})
 		}

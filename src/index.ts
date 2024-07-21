@@ -1,28 +1,22 @@
-import type {
-	FlatParticleData,
-	ParamDataType,
-	ParticleDataItem,
-	ParseDataToParticleCallback,
-	ParamDatas
-} from './types'
+import type { ParticleDataItem, ParseDataToParticleCallback, ParamDatas, ParticleData } from './types'
 import { forPro, parseDataToParticle, traverseData } from './utils'
 
-class Particle<T extends ParamDataType> {
+class Particle<T extends ParamDatas = ParamDatas> {
 	/** 完整的格式化数据 */
-	#particleData: Array<ParticleDataItem>
+	#particleData: ParticleData
 	/** 打平的数据 */
-	#flatParticleData: FlatParticleData
-	constructor(data: T, callback?: ParseDataToParticleCallback) {
+	#flatParticleData: Record<string, ParticleDataItem>
+	constructor(data: T, callback?: ParseDataToParticleCallback<T[0]>) {
 		const { particleData, flatParticleData } = parseDataToParticle(data, callback)
 		this.#particleData = particleData
 		this.#flatParticleData = flatParticleData
 	}
 	add(
-		data: ParamDataType,
+		data: T | T[0],
 		targetKey?: string,
 		options?: {
 			// 格式化回调
-			callback?: ParseDataToParticleCallback
+			callback?: ParseDataToParticleCallback<T[0]>
 			// 添加元素的位置
 			order?: number
 		}
@@ -35,8 +29,9 @@ class Particle<T extends ParamDataType> {
 		}
 		const { callback } = options || {}
 		let { order } = options || {}
+		const formatData = Array.isArray(data) ? data : [data]
 		const { flatParticleData: addFlatParticleData } = parseDataToParticle(
-			data,
+			formatData,
 			(dataItem, index, arr) => {
 				const { $$parent } = dataItem
 				if (!$$parent && targetParticleItem) {
@@ -100,7 +95,7 @@ class Particle<T extends ParamDataType> {
 		data: Record<
 			string,
 			{
-				children?: ParamDatas
+				children?: T
 				[key: string]: unknown
 			}
 		>
@@ -164,7 +159,7 @@ class Particle<T extends ParamDataType> {
 		}
 		const result: {
 			children: string[]
-			childrenMap: Record<string, ParticleDataItem>
+			childrenMap: Record<string, ParticleDataItem<T[0]>>
 		} = {
 			children: [],
 			childrenMap: {}

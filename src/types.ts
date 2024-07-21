@@ -3,76 +3,45 @@
  * name 唯一名称
  * children 子级元素
  */
-export type ParamDataItem<T = Record<string, unknown>> = T & {
+export type ParamDataItem = {
 	name: string
-	children?: Array<ParamDataItem<T>>
+	children?: ParamDatas
 	[key: string]: unknown
 }
-export type ParamDataType<T = Record<string, unknown>> = Array<ParamDataItem<T>> | ParamDataItem<T>
-export type ParamDatas<T = Record<string, unknown>> = Array<ParamDataItem<T>>
+export type ParamDatas = Array<ParamDataItem>
 /**
  * 经过格式化的数据
  * $$parent 父级节点的name
  * $$hierarchy 当前所在的层级
  */
-export type ParticleDataItem<T = Record<string, unknown>> = ParamDataItem<T> & {
+export type ParticleDataItem<T extends ParamDataItem = ParamDataItem> = ParamDataItem & {
 	/** 父级name */
 	$$parent?: string
-}
+} & T
 /**
  * 打平的格式化数据
  */
-export type FlatParticleData<T = Record<string, unknown>> = Record<string, ParticleDataItem<T>>
-export type ParticleData<T = Record<string, unknown>> = Array<ParticleDataItem<T>>
+export type FlatParticleData = Record<string, ParticleDataItem>
+export type ParticleData = Array<ParticleDataItem>
 
 /** 基础类型 */
 export type BaseType = 'map' | 'string' | 'number' | 'array' | 'function' | 'boolean' | 'set' | 'object'
 
 /** 遍历数据回调函数类型 */
-export type ParseDataToParticleCallback<T = Record<string, unknown>> = (
-	dataItem: ParticleDataItem<T>,
+export type ParseDataToParticleCallback<T extends ParamDataItem = ParamDataItem> = (
+	dataItem: T,
 	index?: number,
-	arr?: ParamDataItem<T>[]
+	arr?: Array<T>
 ) => boolean | void
 
-/** 实例方法 */
-export type ParticleInterface<T = Record<string, unknown>> = {
-	add(
-		data: ParamDataType<T>,
-		targetKey?: string,
-		options?: {
-			callback?: ParseDataToParticleCallback<T>
-			order?: number
-		}
-	): void
-	remove(name: string | string[]): void
-	update(
-		data: Record<
-			string,
-			{
-				children?: ParamDatas<T>
-				[key: string]: unknown
-			}
-		>
-	): void
-	get(name?: string): ParticleDataItem<T> | FlatParticleData<T> | undefined
-	getParticles(): ParticleDataItem<T>[]
-	getChildren(name: string):
-		| {
-				children: string[]
-				childrenMap: Record<string, ParticleDataItem<T>>
-		  }
-		| undefined
-}
-
-declare class Particle<T extends ParamDataType> {
+export declare class Particle<T extends ParamDatas = ParamDatas> {
 	#private
-	constructor(data: T, callback?: ParseDataToParticleCallback)
+	constructor(data: T, callback?: ParseDataToParticleCallback<T[0]>)
 	add(
-		data: ParamDataType,
+		data: T | T[0],
 		targetKey?: string,
 		options?: {
-			callback?: ParseDataToParticleCallback
+			callback?: ParseDataToParticleCallback<T[0]>
 			order?: number
 		}
 	): void
@@ -81,19 +50,17 @@ declare class Particle<T extends ParamDataType> {
 		data: Record<
 			string,
 			{
-				children?: ParamDatas
+				children?: T
 				[key: string]: unknown
 			}
 		>
 	): void
-	get(name?: string): ParticleDataItem<Record<string, unknown>> | FlatParticleData | undefined
-	getParticles(): ParticleDataItem[]
+	get(name?: string): ParticleDataItem<T[0]> | Record<string, ParticleDataItem<T[0]>> | undefined
+	getParticles(): ParticleData
 	getChildren(name: string):
 		| {
 				children: string[]
-				childrenMap: Record<string, ParticleDataItem>
+				childrenMap: Record<string, ParticleDataItem<T[0]>>
 		  }
 		| undefined
 }
-
-export { Particle }
