@@ -29,23 +29,25 @@ export type BaseType = 'map' | 'string' | 'number' | 'array' | 'function' | 'boo
 
 /** 遍历数据回调函数类型 */
 export type ParseDataToParticleCallback<T extends ParamDataItem = ParamDataItem> = (
-	dataItem: T,
+	dataItem: ParticleDataItem<T>,
 	index?: number,
 	arr?: Array<T>
 ) => boolean | void
+
+export type RemoveCallback = (removeIndex: number, removeChildren: string[], parent?: string) => void
 
 export declare class Particle<T extends ParamDatas = ParamDatas> {
 	#private
 	constructor(data: T, callback?: ParseDataToParticleCallback<T[0]>)
 	add(
 		data: T | T[0],
-		targetKey?: string,
+		targetName?: string,
 		options?: {
 			callback?: ParseDataToParticleCallback<T[0]>
 			order?: number
 		}
 	): void
-	remove(name: string | string[]): void
+	remove(name: string | string[], callback?: RemoveCallback): boolean
 	update(
 		data: Record<
 			string,
@@ -53,9 +55,12 @@ export declare class Particle<T extends ParamDatas = ParamDatas> {
 				children?: T
 				[key: string]: unknown
 			}
-		>
+		>,
+		options?: {
+			callback?: ParseDataToParticleCallback<T[0]>
+		}
 	): void
-	get(name?: string): ParticleDataItem<T[0]> | Record<string, ParticleDataItem<T[0]>> | undefined
+	get(name?: string): Record<string, ParticleDataItem<T[0]>> | ParticleDataItem<T[0]> | undefined
 	getParticles(): ParticleData
 	getChildren(name: string):
 		| {

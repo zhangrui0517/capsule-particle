@@ -1,4 +1,4 @@
-import type { ParticleDataItem, ParseDataToParticleCallback, ParamDatas, ParticleData } from './types'
+import type { ParticleDataItem, ParseDataToParticleCallback, ParamDatas, ParticleData, RemoveCallback } from './types'
 import { forPro, parseDataToParticle, traverseData } from './utils'
 
 class Particle<T extends ParamDatas = ParamDatas> {
@@ -13,7 +13,7 @@ class Particle<T extends ParamDatas = ParamDatas> {
 	}
 	add(
 		data: T | T[0],
-		targetKey?: string,
+		targetName?: string,
 		options?: {
 			// 格式化回调
 			callback?: ParseDataToParticleCallback<T[0]>
@@ -21,10 +21,10 @@ class Particle<T extends ParamDatas = ParamDatas> {
 			order?: number
 		}
 	) {
-		const targetParticleItem = targetKey ? this.#flatParticleData[targetKey] : null
+		const targetParticleItem = targetName ? this.#flatParticleData[targetName] : null
 		// 找不到目标节点，中断添加字段
 		if (targetParticleItem !== null && !targetParticleItem) {
-			console.error(`The target node cannot be found, please check! The current target key is ${targetKey}`)
+			console.error(`The target node cannot be found, please check! The current target key is ${targetName}`)
 			return
 		}
 		const { callback } = options || {}
@@ -36,7 +36,7 @@ class Particle<T extends ParamDatas = ParamDatas> {
 				const { $$parent } = dataItem
 				if (!$$parent && targetParticleItem) {
 					// 矫正新增数据的父级节点
-					dataItem.$$parent = targetKey
+					dataItem.$$parent = targetName
 				}
 				const result = callback && callback(dataItem, index, arr)
 				if (result !== undefined) {
@@ -65,31 +65,39 @@ class Particle<T extends ParamDatas = ParamDatas> {
 		)
 		Object.assign(this.#flatParticleData, addFlatParticleData)
 	}
-	remove(name: string | string[]) {
+	remove(name: string | string[], callback?: RemoveCallback) {
 		const names = Array.isArray(name) ? name : [name]
-		forPro(names, (name) => {
-			const delParticleItem = this.#flatParticleData[name]
-			if (!delParticleItem) {
-				console.warn(`The element to be deleted does not exist. The name to be deleted is ${name}`)
-				return true
-			}
-			const { children: delChildren } = this.getChildren(name)!
-			const { $$parent } = delParticleItem
-			if ($$parent) {
-				const parentParticleItem = this.#flatParticleData[$$parent]!
-				const deleteIndex = parentParticleItem.children!.indexOf(delParticleItem)
-				parentParticleItem.children!.splice(deleteIndex, 1)
-			} else {
-				const deleteIndex = this.#particleData.indexOf(delParticleItem)
-				this.#particleData.splice(deleteIndex, 1)
-			}
-			delete this.#flatParticleData[name]
-			delChildren.length &&
-				forPro(delChildren, (childKey) => {
-					delete this.#flatParticleData[childKey]
-				})
-			return
-		})
+		try {
+			forPro(names, (name) => {
+				const delParticleItem = this.#flatParticleData[name]
+				if (!delParticleItem) {
+					console.warn(`The element to be deleted does not exist. The name to be deleted is ${name}`)
+					return true
+				}
+				const { children: removeChildren } = this.getChildren(name)!
+				const { $$parent } = delParticleItem
+				if ($$parent) {
+					const parentParticleItem = this.#flatParticleData[$$parent]!
+					const removeIndex = parentParticleItem.children!.indexOf(delParticleItem)
+					parentParticleItem.children!.splice(removeIndex, 1)
+					callback && callback(removeIndex, removeChildren, $$parent)
+				} else {
+					const removeIndex = this.#particleData.indexOf(delParticleItem)
+					this.#particleData.splice(removeIndex, 1)
+					callback && callback(removeIndex, removeChildren, undefined)
+				}
+				delete this.#flatParticleData[name]
+				removeChildren.length &&
+					forPro(removeChildren, (childKey) => {
+						delete this.#flatParticleData[childKey]
+					})
+				return
+			})
+			return true
+		} catch (err) {
+			console.error(err)
+			return false
+		}
 	}
 	update(
 		data: Record<
@@ -98,8 +106,12 @@ class Particle<T extends ParamDatas = ParamDatas> {
 				children?: T
 				[key: string]: unknown
 			}
-		>
+		>,
+		options?: {
+			callback?: ParseDataToParticleCallback<T[0]>
+		}
 	) {
+		const { callback } = options || {}
 		forPro(Object.entries(data), ([name, value]) => {
 			const updateParticleItem = this.#flatParticleData[name]
 			if (!updateParticleItem) {
@@ -116,11 +128,12 @@ class Particle<T extends ParamDatas = ParamDatas> {
 				const { name } = updateParticleItem
 				const { particleData: updateParticleData, flatParticleData: updateFlatParticleData } = parseDataToParticle(
 					updateChildren,
-					(childItem) => {
+					(childItem, childIndex, children) => {
 						const { name: childName, $$parent } = childItem
 						if (!$$parent) {
 							childItem.$$parent = name
 						}
+						callback && callback(childItem, childIndex, children)
 						const updateParticleChildItem = this.#flatParticleData[childName]
 						// 檢查更新的子級中，是否存在非当前节点子级元素，且重复的元素
 						if (updateParticleChildItem) {
