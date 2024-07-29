@@ -22,7 +22,7 @@ export type ParticleDataItem<T extends ParamDataItem = ParamDataItem> = ParamDat
  * 打平的格式化数据
  */
 export type FlatParticleData = Record<string, ParticleDataItem>
-export type ParticleData = Array<ParticleDataItem>
+export type ParticleData<T extends ParamDataItem = ParamDataItem> = Array<ParticleDataItem<T>>
 
 /** 基础类型 */
 export type BaseType = 'map' | 'string' | 'number' | 'array' | 'function' | 'boolean' | 'set' | 'object'
@@ -61,7 +61,7 @@ export declare class Particle<T extends ParamDatas = ParamDatas> {
 		}
 	): void
 	get(name?: string): Record<string, ParticleDataItem<T[0]>> | ParticleDataItem<T[0]> | undefined
-	getParticles(): ParticleData
+	getParticles(): ParticleData<T[0]>
 	getChildren(name: string):
 		| {
 				children: string[]
