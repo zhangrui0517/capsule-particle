@@ -16,36 +16,60 @@ pnpm install capsule-particle
 ```javascript
 import { Particle } from 'capsule-particle';
 const data = {
-  name: 'example',
+  name: 'container',
   children: [
     {
-      name: 'child',
-      children: [...]
+      name: 'child-0',
+      children: [
+				{
+					name: 'child-0-1'
+				}
+			]
     }
   ]
   [field: string]: any
 }
 const particleInstance = new Particle(data, (dataItem, index, data) => {
-  ...
+  console.log('dataItem: ', dataItem)
+	// If you return a Boolean value, true skips the element, false stops traversal
 });
 ```
 ## Instance methods
 ### add
 ```javascript
-particleInstance.add(data, targetName?: string, options?: {
-  callback?: (dataItem, index, data) => void | boolean,
-  order?: number
+particleInstance.add({
+	name: 'example',
+	children: [
+		{
+			name: 'example-child'
+		}
+	]
+}, 'parentName', {
+  callback: (dataItem, index, data) => {
+		console.log('dataItem: ', dataItem)
+		// If you return a Boolean value, true skips the element, false stops traversal
+	}
 })
 ```
 ### remove
 ```javascript
-particleInstance.remove(name: string | string[], callback?: (removeIndex: number, removeChildren, parentName) => void)
+particleInstance.remove(['example'], (removeIndex: number, removeChildren, parentName) => {
+	console.log('removeIndex: ', removeIndex)
+})
 ```
 ### update
 ```javascript
-particleInstance.update(data, options?: {
+// If you update children, the children of the current element will be replaced
+particleInstance.update({
+	name: 'example',
+	children: [
+		{
+			name: 'example-child'
+		}
+	]
+}, {
   callback: (dataItem, index, data) => {
-    ...
+		console.log('dataItem: ', dataItem)
   }
 })
 ```
