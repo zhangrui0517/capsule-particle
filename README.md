@@ -40,7 +40,7 @@ const data = {
 }
 const particleInstance = new Particle(data, (dataItem, index, data) => {
   console.log('dataItem: ', dataItem)
-	// If you return a Boolean value, true skips the element, false stops traversal
+  // If you return a Boolean value, true skips the element, false stops traversal
 });
 ```
 
