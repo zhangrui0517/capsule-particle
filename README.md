@@ -30,10 +30,10 @@ const data = {
     {
       name: 'child-0',
       children: [
-				{
-					name: 'child-0-1'
-				}
-			]
+		{
+			name: 'child-0-1'
+		},
+	  ]
     }
   ]
   [field: string]: any
