@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MapTree 浏览器示例</title>
+  <style>
+    /* 基本样式 */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    /* 输出区域样式 */
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow: auto;
+    }
+    /* 按钮样式 */
+    button {
+      padding: 5px 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    /* 输出容器样式 */
+    .output {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MapTree 浏览器示例</h1>
+  
+  <!-- 操作按钮区域 -->
+  <div>
+    <button id="createTree">创建树</button>
+    <button id="addNode">添加节点</button>
+    <button id="updateNode">更新节点</button>
+    <button id="removeNode">删除节点</button>
+    <button id="getFlatNodes">获取平面数据</button>
+    <button id="searchNodes">查找节点</button>
+    <button id="convertToObject">转为对象</button>
+  </div>
+  
+  <!-- 输出结果区域 -->
+  <div class="output">
+    <h3>输出结果：</h3>
+    <pre id="output"></pre>
+  </div>
+  
+  <!-- 引入MapTree库 (UMD格式) -->
+  <script src="../dist/map-tree.umd.js"></script>
+  
+  <script>
+    /**
+     * 输出函数 - 将信息和数据格式化显示到页面
+     * @param {string} message - 要显示的消息
+     * @param {any} data - 要格式化显示的数据
+     */
+    function log(message, data) {
+      const output = document.getElementById('output');
+      output.textContent = message + '\n' + JSON.stringify(data, replacer, 2);
+    }
+    
+    /**
+     * 自定义JSON序列化函数，用于处理Map对象
+     * 将Map转换为可序列化的对象表示
+     */
+    function replacer(key, value) {
+      if (value instanceof Map) {
+        return {
+          dataType: 'Map',
+          value: Array.from(value.entries())
+        };
+      } else {
+        return value;
+      }
+    }
+    
+    // 全局变量，存储树实例
+    let tree;
+    
+    // ======= 按钮事件处理 =======
+    
+    // 创建树按钮
+    document.getElementById('createTree').addEventListener('click', function() {
+      // 创建一个新的MapTree实例
+      tree = new MapTree.MapTree();
+      log('创建了一个空树:', tree.getRoot());
+    });
+    
+    // 添加节点按钮
+    document.getElementById('addNode').addEventListener('click', function() {
+      // 检查树是否已创建
+      if (!tree) {
+        log('请先创建树!', {});
+        return;
+      }
+      
+      // 添加公司部门结构示例数据
+      tree.setNode(['department'], { name: '公司部门' });
+      tree.setNode(['department', 'dev'], { name: '研发部', headcount: 50 });
+      tree.setNode(['department', 'marketing'], { name: '市场部', headcount: 20 });
+      tree.addChild(['department', 'dev'], 'frontend', { name: '前端组', headcount: 15 });
+      tree.addChild(['department', 'dev'], 'backend', { name: '后端组', headcount: 20 });
+      
+      log('添加了公司部门结构:', tree.getRoot());
+    });
+    
+    // 更新节点按钮
+    document.getElementById('updateNode').addEventListener('click', function() {
+      if (!tree) {
+        log('请先创建树!', {});
+        return;
+      }
+      
+      // 更新前端组信息，添加技术栈
+      const success = tree.setNode(['department', 'dev', 'frontend'], 
+        { name: '前端组', headcount: 18, tech: ['Vue', 'React'] }
+      );
+      
+      if (success) {
+        log('更新了前端组信息:', tree.getNode(['department', 'dev', 'frontend']));
+      } else {
+        log('更新失败', {});
+      }
+    });
+    
+    // 删除节点按钮
+    document.getElementById('removeNode').addEventListener('click', function() {
+      if (!tree) {
+        log('请先创建树!', {});
+        return;
+      }
+      
+      // 删除市场部节点
+      const success = tree.removeNode(['department', 'marketing']);
+      
+      if (success) {
+        log('删除了市场部:', tree.getNode(['department']));
+      } else {
+        log('删除失败', {});
+      }
+    });
+    
+    // 获取平面数据按钮
+    document.getElementById('getFlatNodes').addEventListener('click', function() {
+      if (!tree) {
+        log('请先创建树!', {});
+        return;
+      }
+      
+      // 获取平面化数据并转换为便于显示的格式
+      const flatNodes = tree.getFlatNodes();
+      const result = {};
+      
+      flatNodes.forEach((node, path) => {
+        result[path] = {
+          path: node.path,
+          value: node.value
+        };
+      });
+      
+      log('平面化数据:', result);
+    });
+    
+    // 查找节点按钮
+    document.getElementById('searchNodes').addEventListener('click', function() {
+      if (!tree) {
+        log('请先创建树!', {});
+        return;
+      }
+      
+      // 查找人数超过15人的团队
+      const bigTeams = tree.findNodes((node, path) => {
+        return node.value && 
+               typeof node.value === 'object' &&
+               node.value.headcount && 
+               node.value.headcount > 15;
+      });
+      
+      // 提取查询结果中的关键信息显示
+      log('大团队 (>15人):', bigTeams.map(node => ({
+        path: node.path.join('/'),
+        name: node.value.name,
+        headcount: node.value.headcount
+      })));
+    });
+    
+    // 转为对象按钮
+    document.getElementById('convertToObject').addEventListener('click', function() {
+      if (!tree) {
+        log('请先创建树!', {});
+        return;
+      }
+      
+      // 将Map树转换为普通JavaScript对象
+      const objTree = tree.toObject();
+      
+      log('转换为对象:', objTree);
+    });
+  </script>
+</body>
+</html> 

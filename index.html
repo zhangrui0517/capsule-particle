@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MapTree 开发调试</title>
+</head>
+<body>
+  <h1>MapTree 开发调试页面</h1>
+  <p>查看控制台输出以调试库功能</p>
+
+  <!-- 
+    开发调试脚本
+    导入MapTree库并创建测试数据
+    使用Vite的热模块替换功能，修改代码后自动刷新
+  -->
+  <script type="module">
+    // 从源代码直接导入MapTree类
+    import { MapTree } from './src/index.ts';
+    
+    // 将MapTree类导出到全局作用域，方便在控制台中访问
+    window.MapTree = MapTree;
+    
+    // 创建一个树实例
+    const tree = new MapTree();
+    
+    // 添加示例节点数据
+    tree.setNode(['users'], { count: 2 });
+    tree.setNode(['users', 'user1'], { name: '张三', age: 30 });
+    tree.setNode(['users', 'user2'], { name: '李四', age: 25 });
+    
+    // 输出树结构到控制台
+    console.log('创建的树:', tree.getRoot());
+    console.log('用户1:', tree.getValue(['users', 'user1']));
+    
+    // 导出树实例到全局作用域，方便在控制台中调试
+    window.tree = tree;
+
+    // 可以在控制台尝试以下操作:
+    // 1. tree.addChild(['users'], 'user3', { name: '王五', age: 35 })
+    // 2. tree.removeNode(['users', 'user2'])
+    // 3. tree.findNodes(node => node.value && node.value.age > 28)
+    // 4. tree.toObject()
+  </script>
+</body>
+</html> 

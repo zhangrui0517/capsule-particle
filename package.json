@@ -1,47 +1,50 @@
 {
-  "name": "capsule-particle",
-  "description": "Maintain tree structure data, provide add, delete, modify, query, replace, and flatten data structures. Callback functions can be called during tree construction to modify nodes",
-  "version": "1.0.46",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/types.d.ts",
-  "repository": "https://github.com/zhangrui0517/capsule-particle.git",
+  // 项目名称
+  "name": "map-tree",
+  // 版本号
+  "version": "1.0.0",
+  // 项目描述
+  "description": "一个用于操作Map树数据结构的JavaScript库",
+  // CommonJS格式入口
+  "main": "dist/map-tree.js",
+  // ES模块格式入口
+  "module": "dist/map-tree.mjs",
+  // 浏览器环境UMD格式入口
+  "browser": "dist/map-tree.umd.js",
+  // TypeScript类型声明文件
+  "types": "dist/index.d.ts",
+  // 项目脚本命令
   "scripts": {
-    "prepublish": "pnpm build",
-    "prepare": "husky install",
-    "lint:script": "eslint --ext .js,.jsx,.ts,.tsx --fix --quiet ./",
-    "build": "vite build && pnpm buildType",
-    "dev": "vite -c ./vite.test.ts",
-    "buildType": "tsc ./src/types.ts --declaration --emitDeclarationOnly --declarationDir ./dist --target ES2015"
+    // 开发模式启动Vite服务器
+    "dev": "vite",
+    // 构建项目
+    "build": "vite build",
+    // 预览构建结果
+    "preview": "vite preview",
+    // 发布前运行构建
+    "prepublishOnly": "npm run build"
   },
-  "lint-staged": {
-    "**/*.{js,jsx,tsx,ts}": [
-      "npm run lint:script"
-    ]
-  },
+  // 项目关键词
   "keywords": [
+    "map",
     "tree",
-    "object",
-    "flat",
-    "maintain tree",
-    "curd"
+    "data-structure"
   ],
-  "author": "zhangrui",
+  // 作者
+  "author": "",
+  // 许可证
   "license": "MIT",
+  // 开发依赖
   "devDependencies": {
-    "@commitlint/cli": "^17.5.1",
-    "@commitlint/config-conventional": "^17.4.4",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
-    "@typescript-eslint/parser": "^5.57.1",
-    "commitlint": "^17.5.1",
-    "eslint": "^8.37.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "husky": "^8.0.3",
-    "lint-staged": "^13.2.0",
-    "prettier": "^2.8.7",
-    "terser": "^5.31.3",
-    "typescript": "^5.0.3",
-    "vite": "^4.2.1"
-  }
-}
+    // TypeScript
+    "typescript": "^4.9.5",
+    // Vite构建工具
+    "vite": "^5.0.0",
+    // Vite插件：生成TypeScript声明文件
+    "vite-plugin-dts": "^3.6.0"
+  },
+  // 发布到npm时包含的文件
+  "files": [
+    "dist"
+  ]
+} 
